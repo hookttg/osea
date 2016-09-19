@@ -1,0 +1,26 @@
+syntax = "proto2";
+package temp;
+option java_package = "com.healthme.ecg";
+option java_outer_classname = "Templ";
+message Template2 {
+    optional  uint32 id=1;
+    repeated uint32 positions_of_beats=2;
+}
+message Template1 {
+    optional  uint32 id=1;
+    repeated Template2 template2s=2;
+}
+message BeatTemplate {
+    enum TYPE {
+        N = 1;
+        V = 5;
+        S = 9;
+        A = 13;
+        D = 20;
+    }
+    required TYPE type=1;
+    repeated Template1 template1s=2;
+}
+message Template {
+    repeated BeatTemplate beat_templates=1;
+}
