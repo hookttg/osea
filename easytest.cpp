@@ -128,6 +128,7 @@ public:
 private:
 	int  NextSample(int *vout,int nosig,int ifreq,
 					int ofreq,int init) ;
+    void Initial();
 };
 
 void bankAgent()
@@ -174,17 +175,33 @@ void Joes() {
 int main()
 {
     boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
-    //boost::thread thread2(Joes); // start concurrent execution of Joe
-    //boost::thread thread3(Joe); // start concurrent execution of Joes
+    boost::thread thread2(Joes); // start concurrent execution of Joe
+    boost::thread thread3(Joe); // start concurrent execution of Joes
     thread1.join();
-    //thread2.join();
-    //thread3.join();
+    thread2.join();
+    thread3.join();
     return 0;
 }
 
+void TESTRECORD::Initial()
+{
+    m = 0, n = 0, mn = 0, ot = 0, it = 0 ;       //use in the NextSample
+    //int vv[32], v[32], rval ;    //static to class
+    pos = 0;                     //positon of DAT file
+    lasttime = 0;               //use in putann
+
+    Recordnum;
+    modelnum = 0;
+    for(int i=0;i<MAXTYPES;i++)
+    {
+        modeltype[i] = 0;
+        modeltypenum[i] = 0;
+    }
+}
 
 int TESTRECORD::TestRecord()
 	{
+    Initial();
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     Template tmp;
     temp::BeatTemplate *tmpN=tmp.add_beat_templates();
@@ -193,10 +210,10 @@ int TESTRECORD::TestRecord()
     tmpA->set_type(BeatTemplate::A);
     tmpN->set_type(BeatTemplate::N);
     tmpV->set_type(BeatTemplate::V);
-    modelnum = 0;
     int modeltypev[MAXTYPES+1];
-    for(int i=0;i<MAXTYPES+1;i++)  {
-        modeltypev[i]=0;
+    for(int i=0;i<MAXTYPES+1;i++)
+    {
+        modeltypev[i] = 0;
     }
 
     std::vector< std::vector<int> > m_clusters;
@@ -301,6 +318,7 @@ int TESTRECORD::TestRecord()
             else {
                 int numtypeout = modeltypenum[morphTypenew];
                 if (m_type[numtypeout]==beatType) {
+                    //printf("Record=%d,DetectionTime=%d,\tnumtypeout=%d,\tm_clusters=%d\n",Recordnum,DetectionTime,numtypeout,m_clusters.size());
                    m_clusters[numtypeout].push_back(DetectionTime);
                 }
                 else{
@@ -315,11 +333,11 @@ int TESTRECORD::TestRecord()
                         numtypeout = modeltypev[morphTypenew];
                         m_clusters[numtypeout].push_back(DetectionTime);
                     }
-                }
+                }//*/
             }
         }
     }
-
+    printf("Record,%d,%d\n",Recordnum,m_type.size());
     wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
     fclose(fileann);//CLOSE WRITE THE ATEST FILE
     fclose(file); //CLOSE THE DAT FILE
@@ -332,7 +350,7 @@ int TESTRECORD::TestRecord()
         for (int j = 0; j < m_type.size(); ++j)
         {
             int type = m_type[j];
-            printf("%d\t%d\t%d\n",j,type,m_clusters[j].size());
+            //printf("%d\t%d\t%d\n",j,type,m_clusters[j].size());
             Template1 *tmp1;
             int numID = 0;
             if(1 == type)
@@ -356,11 +374,11 @@ int TESTRECORD::TestRecord()
             Template2 *tmp2 = tmp1->add_template2s();
             tmp2->set_id(numID);
             for(int k=0;k<m_clusters[j].size();k++){
-                printf("%d\n",m_clusters[j][k]);
+                //printf("%d\n",m_clusters[j][k]);
                 tmp2->add_positions_of_beats(m_clusters[j][k]);
             }
         }
-    printf("Record,%d,norm:%d\tv :%d\t other:%d\n",Recordnum,countN,countV,countA);
+    //printf("Record,%d,norm:%d\tv :%d\t other:%d\n",Recordnum,countN,countV,countA);
     if (!tmp.SerializeToOstream(&tempfile)) {
         cerr << "Failed to write address book." << endl;
         return -1;
