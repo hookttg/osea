@@ -115,7 +115,7 @@ void AnalyzeBeat(int *beat, int *onset, int *offset, int *isoLevel,
 	// QRS complex.
 
 	i = FIDMARK-BEAT_MS150 ;
-	maxSlope = maxSlope = beat[i] - beat[i-1] ;
+	maxSlope = minSlope = beat[i] - beat[i-1] ;
 	maxSlopeI = minSlopeI = i ;
 
 	for(; i < FIDMARK+BEAT_MS150; ++i)

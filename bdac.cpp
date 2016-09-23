@@ -131,7 +131,7 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 	int noiseEst = 0, beatBegin, beatEnd ;
 	int domType ;
 	int fidAdj ;
-	int tempBeat[(SAMPLE_RATE/BEAT_SAMPLE_RATE)*BEATLGTH] ;
+	int tempBeat[BEAT_DIV_SAMPLE*BEATLGTH] ;//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 
 
 	// Store new sample in the circular buffer.
@@ -160,7 +160,7 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 
 	// Return if no beat is ready for classification.
 
-	if((BeatQue[0] < (BEATLGTH-FIDMARK)*(SAMPLE_RATE/BEAT_SAMPLE_RATE))
+	if((BeatQue[0] < (BEATLGTH-FIDMARK)*BEAT_DIV_SAMPLE)//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 		|| (BeatQueCount == 0))
 		{
 		noise1.NoiseCheck(ecgSample,0,rr, beatBegin, beatEnd) ;	// Update noise check buffer //noisechk.c
@@ -182,8 +182,8 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 		}
 	else
 		{
-		beatBegin = (SAMPLE_RATE/BEAT_SAMPLE_RATE)*(FIDMARK-match1.GetBeatBegin(domType)) ;
-		beatEnd = (SAMPLE_RATE/BEAT_SAMPLE_RATE)*(match1.GetBeatEnd(domType)-FIDMARK) ;
+		beatBegin = BEAT_DIV_SAMPLE*(FIDMARK-match1.GetBeatBegin(domType)) ;//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
+		beatEnd = BEAT_DIV_SAMPLE*(match1.GetBeatEnd(domType)-FIDMARK) ;//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 		}
 	noiseEst = noise1.NoiseCheck(ecgSample,detectDelay,rr,beatBegin,beatEnd) ;//noisechk.c
 
@@ -191,10 +191,10 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 	// and reduce the sample rate by averageing pairs of data
 	// points.
 
-	j = ECGBufferIndex - detectDelay - (SAMPLE_RATE/BEAT_SAMPLE_RATE)*FIDMARK ;
+	j = ECGBufferIndex - detectDelay - BEAT_DIV_SAMPLE*FIDMARK ;//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 	if(j < 0) j += ECG_BUFFER_LENGTH ;
 
-	for(i = 0; i < (SAMPLE_RATE/BEAT_SAMPLE_RATE)*BEATLGTH; ++i)
+	for(i = 0; i < BEAT_DIV_SAMPLE*BEATLGTH; ++i)//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 		{
 		tempBeat[i] = ECGBuffer[j] ;                              //local data
 		if(++j == ECG_BUFFER_LENGTH)
@@ -223,13 +223,13 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 	else
 		{
 		*beatType = match1.Classify(BeatBuffer,rr,noiseEst,beatMatch,&fidAdj,0) ;//classify.c
-		fidAdj *= SAMPLE_RATE/BEAT_SAMPLE_RATE ;
+		fidAdj *= BEAT_DIV_SAMPLE;//SAMPLE_RATE/BEAT_SAMPLE_RATE ;
       }
 
 	// Ignore detection if the classifier decides that this
 	// was the trailing edge of a PVC.
 
-	if(*beatType == 100)
+	if(*beatType == MAXTYPES)//100
 		{
 		RRCount += rr ;
 		return(0) ;
@@ -237,7 +237,7 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 
 	// Limit the fiducial mark adjustment in case of problems with
 	// beat onset and offset estimation.
-
+        //fidAdj = fidAdj/2;
 	if(fidAdj > MS80)
 		fidAdj = MS80 ;
 	else if(fidAdj < -MS80)
