@@ -27,7 +27,8 @@ You may contact the author by e-mail (pat@eplimited.edu) or postal mail
 MA 02143 USA).  For updates to this software, please visit our website
 (http://www.eplimited.com).
 ******************************************************************************/
-#define BEAT_SAMPLE_RATE	100
+#define BEAT_SAMPLE_RATE	64
+#define BEAT_DIV_SAMPLE     2
 #define BEAT_MS_PER_SAMPLE	( (double) 1000/ (double) BEAT_SAMPLE_RATE)
 
 #define BEAT_MS10		((int) (10/BEAT_MS_PER_SAMPLE + 0.5))

@@ -258,7 +258,7 @@ int MATCHcls::Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int 
 		{
 		beatClass = GetBeatClass(morphType) ;                          //match.c
 		beatWidth = GetBeatWidth(morphType) ;                          //match.c
-		*fidAdj = GetBeatCenter(morphType)-FIDMARK ;                   //match.c
+		*fidAdj = GetBeatCenter(morphType)-FIDMARK;                   //match.c
 
 		// If the width seems large and there have only been a few
 		// beats of this type, use the actual beat for width
@@ -267,7 +267,7 @@ int MATCHcls::Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int 
 		if((beatWidth > offset-onset) && (GetBeatTypeCount(morphType) <= 4))
 			{
 			beatWidth = offset-onset ;
-			*fidAdj = ((offset+onset)/2)-FIDMARK ;
+			*fidAdj = ((offset+onset)/2)-FIDMARK;
 			}
 		}
 
@@ -278,7 +278,7 @@ int MATCHcls::Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int 
 		{
 		beatWidth = offset-onset ;
 		beatClass = UNKNOWN ;
-		*fidAdj = ((offset+onset)/2)-FIDMARK ;
+		*fidAdj = ((offset+onset)/2)-FIDMARK;
 		}
 
 	// Fetch dominant type beat features.
@@ -659,7 +659,7 @@ int MATCHcls::DomMonitor(int morphType, int rhythmClass, int beatWidth, int rr, 
 		// and the one before that was this beat type, assume the last beat
 		// was noise and this beat is normal.
 
-		else if(rr < ((FIDMARK-GetBeatBegin(morphType))*SAMPLE_RATE/BEAT_SAMPLE_RATE)
+		else if(rr < ((FIDMARK-GetBeatBegin(morphType))*BEAT_DIV_SAMPLE)//SAMPLE_RATE/BEAT_SAMPLE_RATE)
 			&& (oldType == morphType))
 			{
 			DMBeatClasses[brIndex] = 1 ;

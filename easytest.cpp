@@ -137,7 +137,7 @@ void bankAgent()
     int Records[] = {203,205,207,208,209,210,212,213,214,215,217,219};
     int REC_count1 = (sizeof(Records)/sizeof(int));
 
-    for(int i=0;i<REC_count1;i++)//REC_count1
+    for(int i=2;i<REC_count1;i++)//REC_count1
     {
         TESTRECORD line0;
         line0.Recordnum = Records[i];
@@ -174,12 +174,15 @@ void Joes() {
 
 int main()
 {
-    boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
-    boost::thread thread2(Joes); // start concurrent execution of Joe
-    boost::thread thread3(Joe); // start concurrent execution of Joes
-    thread1.join();
-    thread2.join();
-    thread3.join();
+    //boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
+    //boost::thread thread2(Joes); // start concurrent execution of Joe
+    //boost::thread thread3(Joe); // start concurrent execution of Joes
+    //thread1.join();
+    //thread2.join();
+    //thread3.join();
+    TESTRECORD line1;
+    line1.Recordnum = 239;
+    line1.TestRecord();
     return 0;
 }
 
@@ -223,9 +226,9 @@ int TESTRECORD::TestRecord()
     char record2[100];
     //numvout = 0;
 	int i, ecg[2], delay;//int recNum ;
-    int ADCZero = 1024;
+    int ADCZero = 0;
     int ADCUnit = 200;
-    int InputFileSampleFrequency = 360;
+    int InputFileSampleFrequency = 128;
 
     sprintf(record,"%d", Recordnum);
     //printf("Record %d\n",Recordnum);//Records[recNum]) ;
@@ -241,7 +244,7 @@ int TESTRECORD::TestRecord()
     // Open a 2 channel record
     //read record
     pos = 0;
-    sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb", Recordnum);
+    sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb/240", Recordnum);
     file = fopen(record2,"rb+");
     fseek(file,0,2);
     long flen=ftell(file); // 得到文件大小
@@ -286,9 +289,13 @@ int TESTRECORD::TestRecord()
             annot.aux = NULL ;
             putann2(fileann,&annot,lasttime,0);
 
+            /*FILE* filetxt = fopen("detect100.txt","a+");
+            fprintf(filetxt,"%d\n",DetectionTime);
+            fclose(filetxt);*/
             //BEGIN TO WRITE THE TMP
             int morphTypenew = bdac.match1.morphType;
             if(beatType == 13){//Q
+                printf("SampleCount = %d, DetectionTime = %d\n", SampleCount, DetectionTime);
                 if(m_clusters.size()<1){
                     m_type.push_back(beatType);
                     std::vector<int> newvec;

@@ -68,7 +68,7 @@ MA 02143 USA).  For updates to this software, please visit our website
 using namespace temp;
 using namespace std;
 
-#define SAMPLE_RATE	200	/* Sample rate in Hz. */
+#define SAMPLE_RATE	128	/* Sample rate in Hz. */
 //#define MS_PER_SAMPLE	(  1000/  SAMPLE_RATE)
 #define MS10	( (10*SAMPLE_RATE+500)/ 1000 )
 #define MS25	( (25*SAMPLE_RATE+500)/ 1000 )
@@ -191,7 +191,7 @@ public:
 #define MAXPREV	8	// Number of preceeding beats used as beat features.
 class MATCHcls{
 
-private://match
+public://match
     int BeatTemplates[MAXTYPES][BEATLGTH] ;
     int BeatCounts[MAXTYPES] ;
     int BeatWidths[MAXTYPES] ;
