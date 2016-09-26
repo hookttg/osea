@@ -117,7 +117,12 @@ private:
     FILE* file;                  //use in the NextSample
     long lasttime;               //use in putann
     temp::Template tmp;          //use in modelwrite
-
+    int md, nd, mnd, otd, itd ;       //use in the NextSample
+    int vvd[32], vd[32], rvald ;    //static to class
+    int posd;
+    FILE* filed;                  //use in the NextSample
+    short *vv2d;
+    int posdcount;
 public:
     int Recordnum;
     //int REC_count;
@@ -128,6 +133,8 @@ public:
 private:
 	int  NextSample(int *vout,int nosig,int ifreq,
 					int ofreq,int init) ;
+    int  NextSample2(int *vout,int nosig,int ifreq,
+                    int ofreq,int init) ;
     void Initial();
 };
 
@@ -181,7 +188,7 @@ int main()
     //thread2.join();
     //thread3.join();
     TESTRECORD line1;
-    line1.Recordnum = 239;
+    line1.Recordnum = 2402;
     line1.TestRecord();
     return 0;
 }
@@ -192,7 +199,11 @@ void TESTRECORD::Initial()
     //int vv[32], v[32], rval ;    //static to class
     pos = 0;                     //positon of DAT file
     lasttime = 0;               //use in putann
-
+    md = 0, nd = 0, mnd = 0, otd = 0, itd = 0 ;       //use in the NextSample
+    posdcount = 0;
+    //int vv[32], v[32], rval ;    //static to class
+    posd = 0;
+    vv2d = new short[2];
     Recordnum;
     modelnum = 0;
     for(int i=0;i<MAXTYPES;i++)
@@ -243,30 +254,38 @@ int TESTRECORD::TestRecord()
 
     // Open a 2 channel record
     //read record
-    pos = 0;
+    //pos = 0;
     sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb/240", Recordnum);
     file = fopen(record2,"rb+");
     fseek(file,0,2);
     long flen=ftell(file); // 得到文件大小
     int length = flen/3;//
-    //printf("file record.dat open\n");
-
     // Initialize sampling frequency adjustment.
     NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,1) ;      //local
 
-    // Initialize beat detection and classification.
+        sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb/240", 240);
+        filed = fopen(record2,"rb+");
+        fseek(filed,0,2);
+        long flend=ftell(filed); // 得到文件大小
+        int lengthd = flend/3;//
+        int ecgd[2];
+        NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,1) ;      //local
+   // Initialize beat detection and classification.
     BDAC bdac;
     bdac.ResetBDAC() ;                                                   //bdac.c
     SampleCount = 0 ;
-
+        //NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0);
     // Read data from MIT/BIH file until tre is none left.
-    while(NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0) >= 0 && pos<=length)  //local
+    while(NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0) >= 0 && pos<=lengthd)  //local
     {
+        NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,0 );      //local
+
         ++SampleCount ;
        // printf("SampleCount %d\n",SampleCount) ;
 
         // Set baseline to 0 and resolution to 5 mV/lsb (200 units/mV)
         lTemp = ecg[0]-ADCZero ;
+       // printf("SampleCount=%d,ecg[0]=%d\n",SampleCount,ecg[0]);
         lTemp *= 200 ;			lTemp /= ADCUnit ;			ecg[0] = lTemp ;
         //printf("ecg[0]---=%d\n",ecg[0]);
         // Pass sample to beat detection and classification.
@@ -487,7 +506,71 @@ int  TESTRECORD::NextSample(int *vout,int nosig,int ifreq,
 	return(rval) ;
 	}
 
+int  TESTRECORD::NextSample2(int *vout,int nosig,int ifreq,
+                            int ofreq,int init)
+{
+    int i ;
+    //short *vv2;
+    //vv2 = new short[2];
 
+    if(init)
+    {
+        i = gcd(ifreq, ofreq);
+        md = ifreq/i;
+        nd = ofreq/i;
+        mnd = md*nd;
+        otd = itd = 0 ;
+        //getvec(vv) ;
+        //rval = getvec(v) ;
+        wfdb_read(filed,posd++,1,vv2d);
+            vvd[0] = int(vv2d[0]);
+        //posdcount++;
+
+        //wfdb_read(filed,posd++,1,vv2);
+        //for(i = 0; i < nosig; ++i)
+            vd[0] = vv2d[1];
+        //posdcount++;
+
+        rvald = 2;
+    }
+
+    else
+    {
+        //printf("next\n");
+        while(otd > itd)
+        {
+            for(i = 0; i < nosig; ++i)
+                vvd[i] = vd[i] ;
+
+            //rval = getvec(v) ;
+            if(posdcount%2==0) {
+                wfdb_read(filed, posd++, 1, vv2d);
+                vd[0] = int(vv2d[0]);
+            }
+            else{
+                if (vv2d[1] & 0x800)
+                    vv2d[1] |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+                vd[0] = int(vv2d[1]);
+            }
+
+            posdcount++;
+
+            if (itd > mnd) { itd -= mnd; otd -= mnd; }
+            itd += nd;
+        }
+        for(i = 0; i < nosig; ++i)
+        {
+            vout[i] = vvd[i] + (otd % nd) * (vd[i] - vvd[i]) / nd;
+        }
+        //posdcount++;
+        otd += md;
+
+    }
+    /*FILE* filevout=fopen("100new.txt","a+");
+    fprintf(filevout,"%d\t%d\t%d\n",numvout++,vout[0],vout[1]);
+    fclose(filevout);*/
+    return(rvald) ;
+}
 // Greatest common divisor of x and y (Euclid's algorithm)
 
 int gcd(int x, int y)
