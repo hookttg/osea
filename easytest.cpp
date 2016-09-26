@@ -274,14 +274,16 @@ int TESTRECORD::TestRecord()
     BDAC bdac;
     bdac.ResetBDAC() ;                                                   //bdac.c
     SampleCount = 0 ;
-        //NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0);
+        NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0);
     // Read data from MIT/BIH file until tre is none left.
     while(NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0) >= 0 && pos<=lengthd)  //local
     {
         NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,0 );      //local
 
         ++SampleCount ;
-       // printf("SampleCount %d\n",SampleCount) ;
+        if(ecg[0]!=ecgd[0]){
+        printf("SampleCount %d\n",SampleCount) ;
+        }
 
         // Set baseline to 0 and resolution to 5 mV/lsb (200 units/mV)
         lTemp = ecg[0]-ADCZero ;
@@ -548,8 +550,8 @@ int  TESTRECORD::NextSample2(int *vout,int nosig,int ifreq,
                 vd[0] = int(vv2d[0]);
             }
             else{
-                if (vv2d[1] & 0x800)
-                    vv2d[1] |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+                //if (vv2d[1] & 0x800)
+                    //vv2d[1] |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
                 vd[0] = int(vv2d[1]);
             }
 

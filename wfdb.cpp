@@ -246,8 +246,12 @@ void wfdb_read(FILE *fd_reader, int pos, int size, short buffer[]) {
 
         buffer[i] = MAKEWORD(lpc[i * 3 ], (lpc[i * 3 + 1 ] & 0x0f));
         buffer[i+1] = MAKEWORD(lpc[i * 3 + 2], (lpc[i * 3 + 1] & 0xf0) >> 4);
-        if (buffer[i] & 0x800) buffer[i] |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        if (buffer[i] & 0x800)
+            buffer[i] |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
         else buffer[i] &= 0xfff;        //positive data, make all the hight bit 0
+        if (buffer[i+1] & 0x800)
+            buffer[i+1] |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else buffer[i+1] &= 0xfff;        //positive data, make all the hight bit 0
     }
     //printf("%d\t%d\n",buffer[0],buffer[1]);
     delete lpc;
