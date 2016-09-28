@@ -69,6 +69,7 @@ This file must be linked with object files produced from:
 *******************************************************************************/
 //#include "/home/healthwe2/Downloads/pthreads.2/pthread.h"
 #include "string.h"
+#include "win.h"
 #include <boost/thread.hpp>
 #include <stdio.h>
 //#include <wfdb/wfdb.h>
@@ -106,35 +107,24 @@ int gcd(int x, int y);
 #endif
 //#define ECG_DB_PATH ". /home/healthwe2/mitdb"
 #define ECG_DB_PATH	". /mnt/hgfs/Software/mitdb"
+
+
 class TESTRECORD{
 private:
-    int m, n, mn, ot, it ;       //use in the NextSample
-    int vv[32], v[32], rval ;    //static to class
     int modeltype[MAXTYPES];     //new create
     int modeltypenum[MAXTYPES];  //new create
     int modelnum;
-    int pos;                     //positon of DAT file
-    FILE* file;                  //use in the NextSample
     long lasttime;               //use in putann
     temp::Template tmp;          //use in modelwrite
-    int md, nd, mnd, otd, itd ;       //use in the NextSample
-    int vvd[32], vd[32], rvald ;    //static to class
-    int posd;
-    FILE* filed;                  //use in the NextSample
-    short *vv2d;
-    int posdcount;
+
+
 public:
     int Recordnum;
-    //int REC_count;
 
 public:
 	int TestRecord();
 
 private:
-	int  NextSample(int *vout,int nosig,int ifreq,
-					int ofreq,int init) ;
-    int  NextSample2(int *vout,int nosig,int ifreq,
-                    int ofreq,int init) ;
     void Initial();
 };
 
@@ -152,41 +142,10 @@ void bankAgent()
     }
 }
 
-void Joe() {
-
-    int Records[] = {100,101,102,103,104,105,106,107,118,119,200,201,202};
-    int REC_count1 = (sizeof(Records)/sizeof(int));     //...
-
-    for(int i=0;i<REC_count1;i++)//REC_count1
-    {
-       TESTRECORD line1;
-       line1.Recordnum = Records[i];
-       line1.TestRecord();
-    }
-}
-
-void Joes() {
-
-    int Records[] = {108,109,111,112,113,114,115,116,117,121,122,123,124};
-    int REC_count1 = (sizeof(Records)/sizeof(int));     //...
-
-    for(int i=0;i<REC_count1;i++)//;i++)
-    {
-        TESTRECORD line1;
-        line1.Recordnum = Records[i];
-        line1.TestRecord();
-    }
-}
-
-
 int main()
 {
     //boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
-    //boost::thread thread2(Joes); // start concurrent execution of Joe
-    //boost::thread thread3(Joe); // start concurrent execution of Joes
     //thread1.join();
-    //thread2.join();
-    //thread3.join();
     TESTRECORD line1;
     line1.Recordnum = 2402;
     line1.TestRecord();
@@ -195,15 +154,7 @@ int main()
 
 void TESTRECORD::Initial()
 {
-    m = 0, n = 0, mn = 0, ot = 0, it = 0 ;       //use in the NextSample
-    //int vv[32], v[32], rval ;    //static to class
-    pos = 0;                     //positon of DAT file
     lasttime = 0;               //use in putann
-    md = 0, nd = 0, mnd = 0, otd = 0, itd = 0 ;       //use in the NextSample
-    posdcount = 0;
-    //int vv[32], v[32], rval ;    //static to class
-    posd = 0;
-    vv2d = new short[2];
     Recordnum;
     modelnum = 0;
     for(int i=0;i<MAXTYPES;i++)
@@ -216,14 +167,16 @@ void TESTRECORD::Initial()
 int TESTRECORD::TestRecord()
 	{
     Initial();
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
-    Template tmp;
+    //Template tmp;
     temp::BeatTemplate *tmpN=tmp.add_beat_templates();
     temp::BeatTemplate *tmpA=tmp.add_beat_templates();
     temp::BeatTemplate *tmpV=tmp.add_beat_templates();
     tmpA->set_type(BeatTemplate::A);
     tmpN->set_type(BeatTemplate::N);
     tmpV->set_type(BeatTemplate::V);
+
     int modeltypev[MAXTYPES+1];
     for(int i=0;i<MAXTYPES+1;i++)
     {
@@ -235,14 +188,12 @@ int TESTRECORD::TestRecord()
 
     char record[10], fname[20] ;
     char record2[100];
-    //numvout = 0;
-	int i, ecg[2], delay;//int recNum ;
+	int i, ecg[2], delay;
     int ADCZero = 0;
     int ADCUnit = 200;
     int InputFileSampleFrequency = 128;
 
     sprintf(record,"%d", Recordnum);
-    //printf("Record %d\n",Recordnum);//Records[recNum]) ;
 
     long SampleCount = 0, lTemp, DetectionTime ;
     int beatType, beatMatch ;
@@ -252,50 +203,67 @@ int TESTRECORD::TestRecord()
     sprintf(record2,"%d.atestmulti", Recordnum);
     FILE *fileann = fopen(record2,"wb");
 
-    // Open a 2 channel record
+    // Open a 1 channel record
     //read record
-    //pos = 0;
-    sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb/240", Recordnum);
-    file = fopen(record2,"rb+");
-    fseek(file,0,2);
-    long flen=ftell(file); // 得到文件大小
-    int length = flen/3;//
-    // Initialize sampling frequency adjustment.
-    NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,1) ;      //local
+    sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb/240", 240);
+    int posd=0;
+    FILE* filed;                  //use in the NextSample
+    filed = fopen(record2,"rb+");
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
 
-        sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb/240", 240);
-        filed = fopen(record2,"rb+");
-        fseek(filed,0,2);
-        long flend=ftell(filed); // 得到文件大小
-        int lengthd = flend/3;//
-        int ecgd[2];
-        NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,1) ;      //local
+    char* lpc = new char[flend];
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+    int dataOUT;
+
+    int file2c_lsize = flend*2;
+    FILE* fp = fopen("24022.dat","w");
+    if (fp == NULL){
+        printf("can't open the output 2-channel file!");
+        return 0;
+    }
+
+    char *buf = (char *) malloc(file2c_lsize);
+    char* lpc2 = (char *) buf;
    // Initialize beat detection and classification.
     BDAC bdac;
     bdac.ResetBDAC() ;                                                   //bdac.c
     SampleCount = 0 ;
-        NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0);
-    // Read data from MIT/BIH file until tre is none left.
-    while(NextSample(ecg,2,InputFileSampleFrequency,SAMPLE_RATE,0) >= 0 && pos<=lengthd)  //local
-    {
-        NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,0 );      //local
 
-        ++SampleCount ;
-        if(ecg[0]!=ecgd[0]){
-        printf("SampleCount %d\n",SampleCount) ;
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd <= lengthd)  //local
+    {
+       // NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,0 );      //local
+        if(SampleCount%2==0){
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else{
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
         }
 
-        // Set baseline to 0 and resolution to 5 mV/lsb (200 units/mV)
-        lTemp = ecg[0]-ADCZero ;
-       // printf("SampleCount=%d,ecg[0]=%d\n",SampleCount,ecg[0]);
-        lTemp *= 200 ;			lTemp /= ADCUnit ;			ecg[0] = lTemp ;
-        //printf("ecg[0]---=%d\n",ecg[0]);
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+
+        ++SampleCount ;
+
         // Pass sample to beat detection and classification.
 
-        delay = bdac.BeatDetectAndClassify(ecg[0], &beatType, &beatMatch) ;    //bdac.c
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
 
         // If a beat was detected, annotate the beat location
         // and type.
+        dataOUT = bdac.qrsdet1.datafilt;
+        lpc2[0] = LOBYTE((short) dataIN);
+        lpc2[1] = 0;
+        lpc2[1] = HIBYTE((short) dataIN) & 0x0f;
+        lpc2[2] = LOBYTE((short) dataOUT);
+        lpc2[1] |= HIBYTE((short) dataOUT) << 4;
+        lpc2 += 3;
 
         if(delay != 0)
         {
@@ -316,7 +284,7 @@ int TESTRECORD::TestRecord()
             //BEGIN TO WRITE THE TMP
             int morphTypenew = bdac.match1.morphType;
             if(beatType == 13){//Q
-                printf("SampleCount = %d, DetectionTime = %d\n", SampleCount, DetectionTime);
+                //printf("SampleCount = %d, DetectionTime = %d\n", SampleCount, DetectionTime);
                 if(m_clusters.size()<1){
                     m_type.push_back(beatType);
                     std::vector<int> newvec;
@@ -365,10 +333,13 @@ int TESTRECORD::TestRecord()
             }
         }
     }
+    fwrite( buf, sizeof(char), file2c_lsize, fp);
+    fclose(fp);
+    free(buf);
     printf("Record,%d,%d\n",Recordnum,m_type.size());
     wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
     fclose(fileann);//CLOSE WRITE THE ATEST FILE
-    fclose(file); //CLOSE THE DAT FILE
+    fclose(filed); //CLOSE THE DAT FILE
 
     sprintf(record2,"%d.tmp", Recordnum);
     // Write the new address book back to disk.
@@ -452,127 +423,7 @@ int TESTRECORD::TestRecord()
    there is no more data left.
 ***********************************************************************/
 
-int  TESTRECORD::NextSample(int *vout,int nosig,int ifreq,
-						int ofreq,int init)
-	{
-	int i ;short *vv2;
-    vv2 = new short[2];
 
-	if(init)
-		{
-		i = gcd(ifreq, ofreq);
-		m = ifreq/i;
-		n = ofreq/i;
-		mn = m*n;
-		ot = it = 0 ;
-		//getvec(vv) ;
-		//rval = getvec(v) ;
-        wfdb_read(file,pos++,1,vv2);
-        for(i = 0; i < nosig; ++i)
-           vv[i] = int(vv2[i]);
-
-        wfdb_read(file,pos++,1,vv2);
-        for(i = 0; i < nosig; ++i)
-            v[i] = vv2[i];
-
-            rval = 2;
-		}
-
-	else
-		{
-            //printf("next\n");
-		while(ot > it)
-			{
-	    	for(i = 0; i < nosig; ++i)
-                vv[i] = v[i] ;
-
-			//rval = getvec(v) ;
-            wfdb_read(file,pos++,1,vv2);
-            for(i = 0; i < nosig; ++i)
-                v[i] = int(vv2[i]);
-
-		    if (it > mn) { it -= mn; ot -= mn; }
-		    it += n;
-		    }		
-	    for(i = 0; i < nosig; ++i)
-            {
-            vout[i] = vv[i] + (ot % n) * (v[i] - vv[i]) / n;
-            }
-		ot += m;
-
-		}
-        /*FILE* filevout=fopen("100new.txt","a+");
-        fprintf(filevout,"%d\t%d\t%d\n",numvout++,vout[0],vout[1]);
-        fclose(filevout);*/
-        delete[]vv2;
-	return(rval) ;
-	}
-
-int  TESTRECORD::NextSample2(int *vout,int nosig,int ifreq,
-                            int ofreq,int init)
-{
-    int i ;
-    //short *vv2;
-    //vv2 = new short[2];
-
-    if(init)
-    {
-        i = gcd(ifreq, ofreq);
-        md = ifreq/i;
-        nd = ofreq/i;
-        mnd = md*nd;
-        otd = itd = 0 ;
-        //getvec(vv) ;
-        //rval = getvec(v) ;
-        wfdb_read(filed,posd++,1,vv2d);
-            vvd[0] = int(vv2d[0]);
-        //posdcount++;
-
-        //wfdb_read(filed,posd++,1,vv2);
-        //for(i = 0; i < nosig; ++i)
-            vd[0] = vv2d[1];
-        //posdcount++;
-
-        rvald = 2;
-    }
-
-    else
-    {
-        //printf("next\n");
-        while(otd > itd)
-        {
-            for(i = 0; i < nosig; ++i)
-                vvd[i] = vd[i] ;
-
-            //rval = getvec(v) ;
-            if(posdcount%2==0) {
-                wfdb_read(filed, posd++, 1, vv2d);
-                vd[0] = int(vv2d[0]);
-            }
-            else{
-                //if (vv2d[1] & 0x800)
-                    //vv2d[1] |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
-                vd[0] = int(vv2d[1]);
-            }
-
-            posdcount++;
-
-            if (itd > mnd) { itd -= mnd; otd -= mnd; }
-            itd += nd;
-        }
-        for(i = 0; i < nosig; ++i)
-        {
-            vout[i] = vvd[i] + (otd % nd) * (vd[i] - vvd[i]) / nd;
-        }
-        //posdcount++;
-        otd += md;
-
-    }
-    /*FILE* filevout=fopen("100new.txt","a+");
-    fprintf(filevout,"%d\t%d\t%d\n",numvout++,vout[0],vout[1]);
-    fclose(filevout);*/
-    return(rvald) ;
-}
 // Greatest common divisor of x and y (Euclid's algorithm)
 
 int gcd(int x, int y)
