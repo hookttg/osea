@@ -85,15 +85,13 @@ This file must be linked with object files produced from:
 
 
 // External function prototypes.
-void wfdb_read(FILE *fd_reader, int pos, int size, short buffer[]);
+//void wfdb_read(FILE *fd_reader, int pos, int size, short buffer[]);
 int putann2(FILE *fp, WFDB_Annotation *annot, long &last_time,int shift_offset);
 void wfdb_p16(unsigned int x, FILE *fp);
 //void ResetBDAC(void) ;//bdac.c
 //int BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch) ;//bdac.c
 
 // Local Prototypes.
-//int  NextSample(int *vout,int nosig,int ifreq,
-//						int ofreq,int init) ;
 char *get_file_name(const char *path);
 void remove_extension(char* path);
 
@@ -130,26 +128,45 @@ private:
 void bankAgent()
 {
 
-    int Records[] = {203,205,207,208,209,210,212,213,214,215,217,219};
+    int Records[] = {202,206,208,209,210,211,212,213,214,218,216};
     int REC_count1 = (sizeof(Records)/sizeof(int));
-
-    for(int i=2;i<REC_count1;i++)//REC_count1
+    char name[100];
+    for(int i=0;i<REC_count1;i++)//REC_count1
     {
         TESTRECORD line0;
         line0.Recordnum = Records[i];
-        const char* path="240/240.dat";
-        line0.TestRecord(path);
+        snprintf(name,100,"/home/healthwe2/mitdb/240/read/2016-08/%d.dat",Records[i]);
+        //const char* path="240/240.dat";
+        line0.TestRecord(name);
+    }
+}
+
+void joe()
+{
+
+    int Records[] = {230,231,232,233,234,235,236,237,238,239,240};
+    int REC_count1 = (sizeof(Records)/sizeof(int));
+    char name[100];
+    for(int i=0;i<REC_count1;i++)//REC_count1
+    {
+        TESTRECORD line0;
+        line0.Recordnum = Records[i];
+        snprintf(name,100,"/home/healthwe2/mitdb/240/read/2016-09/%d.dat",Records[i]);
+        //const char* path="240/240.dat";
+        line0.TestRecord(name);
     }
 }
 
 int main()
 {
-    //boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
-    //thread1.join();
-    TESTRECORD line1;
+    boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
+    boost::thread thread2(joe); // start concurrent execution of bankAgent
+    thread1.join();
+    thread2.join();
+    /*TESTRECORD line1;
     //line1.Recordnum = 2402;
     const char* path="/home/healthwe2/mitdb/240/read/2016-09/240.dat";
-    line1.TestRecord(path);
+    line1.TestRecord(path);*/
     return 0;
 }
 
@@ -183,20 +200,20 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     string WRITE_PATH,READ_PATH;
     memset(date_tmp, 0, _MAX_PATH);
     data_file_name = get_file_name(data_file_path);
-    strcpy(ecg_file_name, data_file_name);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
     remove_extension(ecg_file_name);
     strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
-    strcpy(date_path,get_file_name(date_tmp));
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
     //conf::Instance()->Get("write_path", WRITE_PATH);
     //conf::Instance()->Get("read_path", READ_PATH);
     WRITE_PATH = WRITE_PATH_0;
     READ_PATH = READ_PATH_0;
-    sprintf(ecg_filtered_data_file_path, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
-    sprintf(ecg_annotation_file_path, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
     //sprintf(ecg_AF_file_path, "%s/%s/%s.af", WRITE_PATH.c_str(), date_path, ecg_file_name);
-    sprintf(ecg_head_file_path, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
-    sprintf(ecg_tmp_file_path, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
-    sprintf(ecg_config_file_path, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_head_file_path,_MAX_PATH, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_tmp_file_path,_MAX_PATH, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_config_file_path,_MAX_PATH, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
     //sprintf(ecg_write_path, "%s/%s/%s", WRITE_PATH.c_str(), date_path,ecg_file_name);
 
     Initial();
@@ -218,7 +235,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     std::vector< std::vector<int> > m_clusters;
     std::vector<int> m_type;
 
-    char record[500];
+    //char record[500];
 	int delay;
     int InputFileSampleFrequency = 128;
 
@@ -240,7 +257,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     long flend=ftell(filed); // 得到文件大小
     int lengthd = flend/3;
 
-    char* lpc = new char[flend];
+    char* lpc = new char[flend];//(char *) malloc(flend);//
     fseek(filed, 0, SEEK_SET);
     fread(lpc, flend,1,filed);
     int dataIN;
@@ -253,9 +270,10 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         return 0;
     }
 
-    char *buf = (char *) malloc(file2c_lsize);
+    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
     char* lpc2 = (char *) buf;
-    //write the head file
+
+        //write the head file
     FILE *filehea = fopen(ecg_head_file_path, "w");
     int sNum = 2;
     float sr = 128;
@@ -369,9 +387,14 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     }
 
     fwrite( buf, sizeof(char), file2c_lsize, fp);
+    printf("%s,buf free\n",data_file_name);
+    //free(buf);
+        // delete[]buf;buf=NULL;
     fclose(fp);
-    free(buf);
-
+    printf("%s,lpc free1\n",data_file_name);
+        delete[]lpc;lpc=NULL;
+    //free(lpc);
+        printf("%s,lpc free2\n",data_file_name);
     printf("Record,%s,%d\n",data_file_name,m_type.size());
     wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
     fclose(fileann);//CLOSE WRITE THE ATEST FILE
