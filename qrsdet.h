@@ -153,6 +153,7 @@ private:
     int Peak( int datum, int init );
 
 public:
+    int datafilt;
     int QRSDet( int datum, int init );
 };
 
@@ -277,11 +278,10 @@ public:
 
 class BDAC{
 private:
-    QRSdetcls qrsdet1;
     NOISEcls noise1;
 public:
     MATCHcls match1;
-
+    QRSdetcls qrsdet1;
 private:
     int ECGBuffer[ECG_BUFFER_LENGTH], ECGBufferIndex;  // Circular data buffer.
     int BeatBuffer[BEATLGTH] ;                              //100

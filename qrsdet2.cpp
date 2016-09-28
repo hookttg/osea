@@ -149,7 +149,7 @@ int QRSdetcls::QRSDet( int datum, int init )
 		}
 
 	fdatum = QRSFilter(datum,0) ;	/* Filter data. */           //qrsfilt.c
-
+    datafilt = fdatum;
 
 	/* Wait until normal detector is ready before calling early detections. */
 
