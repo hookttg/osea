@@ -94,11 +94,9 @@ void wfdb_p16(unsigned int x, FILE *fp);
 // Local Prototypes.
 //int  NextSample(int *vout,int nosig,int ifreq,
 //						int ofreq,int init) ;
-int gcd(int x, int y);
+char *get_file_name(const char *path);
+void remove_extension(char* path);
 
-// Global variables.
-
-//int ADCZero, ADCUnit, InputFileSampleFrequency ;
 
 #ifdef __STDC__
 #define MAINTYPE int
@@ -107,7 +105,8 @@ int gcd(int x, int y);
 #endif
 //#define ECG_DB_PATH ". /home/healthwe2/mitdb"
 #define ECG_DB_PATH	". /mnt/hgfs/Software/mitdb"
-
+#define WRITE_PATH_0   "/home/healthwe2/mitdb/240/write";
+#define READ_PATH_0  "/home/healthwe2/mitdb/240/read";
 
 class TESTRECORD{
 private:
@@ -122,7 +121,7 @@ public:
     int Recordnum;
 
 public:
-	int TestRecord();
+	int TestRecord(const char *data_file_path);
 
 private:
     void Initial();
@@ -138,7 +137,8 @@ void bankAgent()
     {
         TESTRECORD line0;
         line0.Recordnum = Records[i];
-        line0.TestRecord();
+        const char* path="240/240.dat";
+        line0.TestRecord(path);
     }
 }
 
@@ -147,8 +147,9 @@ int main()
     //boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
     //thread1.join();
     TESTRECORD line1;
-    line1.Recordnum = 2402;
-    line1.TestRecord();
+    //line1.Recordnum = 2402;
+    const char* path="/home/healthwe2/mitdb/240/read/2016-09/240.dat";
+    line1.TestRecord(path);
     return 0;
 }
 
@@ -164,10 +165,41 @@ void TESTRECORD::Initial()
     }
 }
 
-int TESTRECORD::TestRecord()
+int TESTRECORD::TestRecord(const char *data_file_path)
 	{
-    Initial();
+    int _MAX_PATH =500;
 
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
+    char ecg_annotation_file_path[_MAX_PATH]; //saved file name
+    //char ecg_AF_file_path[_MAX_PATH]; //saved file name
+    char ecg_head_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_tmp_file_path[_MAX_PATH]; //saved file name           7
+    //char ecg_write_path[_MAX_PATH];// the path with date stern directory
+    char ecg_config_file_path[_MAX_PATH];// the path with config
+    string WRITE_PATH,READ_PATH;
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strcpy(ecg_file_name, data_file_name);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strcpy(date_path,get_file_name(date_tmp));
+    //conf::Instance()->Get("write_path", WRITE_PATH);
+    //conf::Instance()->Get("read_path", READ_PATH);
+    WRITE_PATH = WRITE_PATH_0;
+    READ_PATH = READ_PATH_0;
+    sprintf(ecg_filtered_data_file_path, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    sprintf(ecg_annotation_file_path, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    //sprintf(ecg_AF_file_path, "%s/%s/%s.af", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    sprintf(ecg_head_file_path, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    sprintf(ecg_tmp_file_path, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    sprintf(ecg_config_file_path, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    //sprintf(ecg_write_path, "%s/%s/%s", WRITE_PATH.c_str(), date_path,ecg_file_name);
+
+    Initial();
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //Template tmp;
     temp::BeatTemplate *tmpN=tmp.add_beat_templates();
@@ -186,29 +218,24 @@ int TESTRECORD::TestRecord()
     std::vector< std::vector<int> > m_clusters;
     std::vector<int> m_type;
 
-    char record[10], fname[20] ;
-    char record2[100];
-	int i, ecg[2], delay;
-    int ADCZero = 0;
-    int ADCUnit = 200;
+    char record[500];
+	int delay;
     int InputFileSampleFrequency = 128;
 
-    sprintf(record,"%d", Recordnum);
 
-    long SampleCount = 0, lTemp, DetectionTime ;
+    long SampleCount = 0;
+    long DetectionTime = 0;
     int beatType, beatMatch ;
     lasttime =0;
 
     WFDB_Annotation annot ;//write to annot
-    sprintf(record2,"%d.atestmulti", Recordnum);
-    FILE *fileann = fopen(record2,"wb");
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
 
     // Open a 1 channel record
     //read record
-    sprintf(record2,"%s/%d.dat", "/home/healthwe2/mitdb/240", 240);
     int posd=0;
-    FILE* filed;                  //use in the NextSample
-    filed = fopen(record2,"rb+");
+    FILE* filed;
+    filed = fopen(data_file_path,"rb+");//
     fseek(filed,0,2);
     long flend=ftell(filed); // 得到文件大小
     int lengthd = flend/3;
@@ -220,7 +247,7 @@ int TESTRECORD::TestRecord()
     int dataOUT;
 
     int file2c_lsize = flend*2;
-    FILE* fp = fopen("24022.dat","w");
+    FILE* fp = fopen(ecg_filtered_data_file_path,"w");//
     if (fp == NULL){
         printf("can't open the output 2-channel file!");
         return 0;
@@ -228,10 +255,22 @@ int TESTRECORD::TestRecord()
 
     char *buf = (char *) malloc(file2c_lsize);
     char* lpc2 = (char *) buf;
+    //write the head file
+    FILE *filehea = fopen(ecg_head_file_path, "w");
+    int sNum = 2;
+    float sr = 128;
+    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
+    int eNum = 0;
+    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc,
+                  0, "v5");
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0,
+                  "v5");
+    fclose(filehea);
+
    // Initialize beat detection and classification.
     BDAC bdac;
     bdac.ResetBDAC() ;                                                   //bdac.c
-    SampleCount = 0 ;
 
     // Read data from MIT/BIH file until tre is none left.
     while( posd <= lengthd)  //local
@@ -278,13 +317,9 @@ int TESTRECORD::TestRecord()
             annot.aux = NULL ;
             putann2(fileann,&annot,lasttime,0);
 
-            /*FILE* filetxt = fopen("detect100.txt","a+");
-            fprintf(filetxt,"%d\n",DetectionTime);
-            fclose(filetxt);*/
             //BEGIN TO WRITE THE TMP
             int morphTypenew = bdac.match1.morphType;
             if(beatType == 13){//Q
-                //printf("SampleCount = %d, DetectionTime = %d\n", SampleCount, DetectionTime);
                 if(m_clusters.size()<1){
                     m_type.push_back(beatType);
                     std::vector<int> newvec;
@@ -314,7 +349,6 @@ int TESTRECORD::TestRecord()
             else {
                 int numtypeout = modeltypenum[morphTypenew];
                 if (m_type[numtypeout]==beatType) {
-                    //printf("Record=%d,DetectionTime=%d,\tnumtypeout=%d,\tm_clusters=%d\n",Recordnum,DetectionTime,numtypeout,m_clusters.size());
                    m_clusters[numtypeout].push_back(DetectionTime);
                 }
                 else{
@@ -329,111 +363,82 @@ int TESTRECORD::TestRecord()
                         numtypeout = modeltypev[morphTypenew];
                         m_clusters[numtypeout].push_back(DetectionTime);
                     }
-                }//*/
+                }
             }
         }
     }
+
     fwrite( buf, sizeof(char), file2c_lsize, fp);
     fclose(fp);
     free(buf);
-    printf("Record,%d,%d\n",Recordnum,m_type.size());
+
+    printf("Record,%s,%d\n",data_file_name,m_type.size());
     wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
     fclose(fileann);//CLOSE WRITE THE ATEST FILE
     fclose(filed); //CLOSE THE DAT FILE
 
-    sprintf(record2,"%d.tmp", Recordnum);
     // Write the new address book back to disk.
     int Nnum = 0, Vnum=0, Anum = 0;
     int countN = 0,countV = 0,countA=0;
-    fstream tempfile(record2, ios::out | ios::trunc | ios::binary);
-        for (int j = 0; j < m_type.size(); ++j)
+    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    for (int j = 0; j < m_type.size(); ++j)
+    {
+        int type = m_type[j];
+        //printf("%d\t%d\t%d\n",j,type,m_clusters[j].size());
+        Template1 *tmp1;
+        int numID = 0;
+        if(1 == type)
         {
-            int type = m_type[j];
-            //printf("%d\t%d\t%d\n",j,type,m_clusters[j].size());
-            Template1 *tmp1;
-            int numID = 0;
-            if(1 == type)
-            {
-                tmp1 = tmpN->add_template1s();
-                numID = Nnum++;
-                countN += m_clusters[j].size();
-            }
-            else if(5 == type){
-                tmp1 = tmpV->add_template1s();
-                numID = Vnum++;
-                countV += m_clusters[j].size();
-            }
-            else{
-                tmp1 = tmpA->add_template1s();
-                numID = Anum++;
-                countA += m_clusters[j].size();
-            }
-
-            //tmp1->set_id(0);
-            Template2 *tmp2 = tmp1->add_template2s();
-            tmp2->set_id(numID);
-            for(int k=0;k<m_clusters[j].size();k++){
-                //printf("%d\n",m_clusters[j][k]);
-                tmp2->add_positions_of_beats(m_clusters[j][k]);
-            }
+            tmp1 = tmpN->add_template1s();
+            numID = Nnum++;
+            countN += m_clusters[j].size();
         }
-    //printf("Record,%d,norm:%d\tv :%d\t other:%d\n",Recordnum,countN,countV,countA);
+        else if(5 == type){
+            tmp1 = tmpV->add_template1s();
+            numID = Vnum++;
+            countV += m_clusters[j].size();
+        }
+        else{
+            tmp1 = tmpA->add_template1s();
+            numID = Anum++;
+            countA += m_clusters[j].size();
+        }
+
+        Template2 *tmp2 = tmp1->add_template2s();
+        tmp2->set_id(numID);
+        for(int k=0;k<m_clusters[j].size();k++){
+            tmp2->add_positions_of_beats(m_clusters[j][k]);
+        }
+    }
+
     if (!tmp.SerializeToOstream(&tempfile)) {
         cerr << "Failed to write address book." << endl;
         return -1;
     }
     google::protobuf::ShutdownProtobufLibrary();
 
-    // Reset database after record is done.
-
-  #if 0
-          /* This code is obsolete.  The annotation files are always
-             written into "<record>.ate" in the current directory.
-                     They do not need to be copied in order to be read by bxbep,
-             if the WFDB path includes both the current current directory
-             and the one containing the .atr reference annotation files.
-                   */
-
-		// Copy "atest.<record>" to "<record>.ate" for future ascess.
-		// (This is necessary for PC files)
-
-		sprintf(fname,"%s.ate",record) ;
-		newAnn0 = fopen(fname,"rb") ;
-		sprintf(fname,"%s%s.ate",ECG_DB_PATH,record) ;
-		newAnn1 = fopen(fname,"wb") ;
-
-		// Copy byte image of annotation file in this
-		// directory to a correctly named file in the
-		// database directory.
-
-		while(fread(&byte,sizeof(char),1,newAnn0) == 1)
-			fwrite(&byte,sizeof(char),1,newAnn1) ;
-
-		fclose(newAnn0) ;
-		fclose(newAnn1) ;
-#endif
-		//}
-	}
-
-/**********************************************************************
-	NextSample reads MIT/BIH Arrhythmia data from a file of data
-	sampled at ifreq and returns data sampled at ofreq.  Data is
-	returned in vout via *vout.  NextSample must be initialized by
-	passing in a nonzero value in init.  NextSample returns -1 when
-   there is no more data left.
-***********************************************************************/
-
-
-// Greatest common divisor of x and y (Euclid's algorithm)
-
-int gcd(int x, int y)
-	{
-	while (x != y) {
-		if (x > y) x-=y;
-		else y -= x;
-		}
-	return (x);
+    return 0;
 	}
 
 
+char *get_file_name(const char *path) {
+    char *ssc;
+    int l = 0;
+    char *name = (char *) path;
+    ssc = strstr(name, "/");
+    while (ssc) {
+        l = strlen(ssc) + 1;
+        name = &name[strlen(name) - l + 2];
+        ssc = strstr(name, "/");
+    };
+    return name;
+}
 
+void remove_extension(char* path) {
+    for (int i = (int) strlen(path) - 1; i > 0; i--) {
+        if (path[i] == '.') {
+            path[i] = 0;
+            return;
+        }
+    }
+}
