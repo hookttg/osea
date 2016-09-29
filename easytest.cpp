@@ -217,6 +217,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     //sprintf(ecg_write_path, "%s/%s/%s", WRITE_PATH.c_str(), date_path,ecg_file_name);
 
     Initial();
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
     //Template tmp;
     temp::BeatTemplate *tmpN=tmp.add_beat_templates();
@@ -231,32 +232,33 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     {
         modeltypev[i] = 0;
     }
-
     std::vector< std::vector<int> > m_clusters;
     std::vector<int> m_type;
 
-    //char record[500];
+   //find QRS
 	int delay;
     int InputFileSampleFrequency = 128;
-
-
     long SampleCount = 0;
     long DetectionTime = 0;
     int beatType, beatMatch ;
     lasttime =0;
 
-    WFDB_Annotation annot ;//write to annot
+    //write to annot
+    WFDB_Annotation annot ;
     FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
 
     // Open a 1 channel record
     //read record
-    int posd=0;
-    FILE* filed;
-    filed = fopen(data_file_path,"rb+");//
+
+    FILE* filed = fopen(data_file_path,"rb+");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
     fseek(filed,0,2);
     long flend=ftell(filed); // 得到文件大小
     int lengthd = flend/3;
-
+    int posd=0;
     char* lpc = new char[flend];//(char *) malloc(flend);//
     fseek(filed, 0, SEEK_SET);
     fread(lpc, flend,1,filed);
@@ -387,14 +389,10 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     }
 
     fwrite( buf, sizeof(char), file2c_lsize, fp);
-    printf("%s,buf free\n",data_file_name);
-    //free(buf);
-        // delete[]buf;buf=NULL;
     fclose(fp);
-    printf("%s,lpc free1\n",data_file_name);
-        delete[]lpc;lpc=NULL;
-    //free(lpc);
-        printf("%s,lpc free2\n",data_file_name);
+    //delete[]buf;
+    delete[]lpc;
+
     printf("Record,%s,%d\n",data_file_name,m_type.size());
     wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
     fclose(fileann);//CLOSE WRITE THE ATEST FILE
