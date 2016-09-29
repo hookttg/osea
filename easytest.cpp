@@ -129,6 +129,7 @@ void bankAgent()
 {
 
     int Records[] = {202,206,208,209,210,211,212,213,214,218,216};
+//        int Records[] = {202,206};
     int REC_count1 = (sizeof(Records)/sizeof(int));
     char name[100];
     for(int i=0;i<REC_count1;i++)//REC_count1
@@ -145,6 +146,7 @@ void joe()
 {
 
     int Records[] = {230,231,232,233,234,235,236,237,238,239,240};
+//    int Records[] = {230,231};
     int REC_count1 = (sizeof(Records)/sizeof(int));
     char name[100];
     for(int i=0;i<REC_count1;i++)//REC_count1
@@ -163,10 +165,10 @@ int main()
     boost::thread thread2(joe); // start concurrent execution of bankAgent
     thread1.join();
     thread2.join();
-    /*TESTRECORD line1;
-    //line1.Recordnum = 2402;
-    const char* path="/home/healthwe2/mitdb/240/read/2016-09/240.dat";
-    line1.TestRecord(path);*/
+//    TESTRECORD line1;
+//    //line1.Recordnum = 2402;
+//    const char* path="/home/healthwe2/mitdb/240/read/2016-09/240.dat";
+//    line1.TestRecord(path);
     return 0;
 }
 
@@ -184,6 +186,7 @@ void TESTRECORD::Initial()
 
 int TESTRECORD::TestRecord(const char *data_file_path)
 	{
+
     int _MAX_PATH =500;
 
     char *data_file_name;
@@ -293,7 +296,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     bdac.ResetBDAC() ;                                                   //bdac.c
 
     // Read data from MIT/BIH file until tre is none left.
-    while( posd <= lengthd)  //local
+    while( posd < lengthd)  //local
     {
        // NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,0 );      //local
         if(SampleCount%2==0){
@@ -390,7 +393,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
 
     fwrite( buf, sizeof(char), file2c_lsize, fp);
     fclose(fp);
-    //delete[]buf;
+    delete[]buf;
     delete[]lpc;
 
     printf("Record,%s,%d\n",data_file_name,m_type.size());
