@@ -70,7 +70,7 @@ This file must be linked with object files produced from:
 //#include "/home/healthwe2/Downloads/pthreads.2/pthread.h"
 #include "string.h"
 #include "win.h"
-#include <boost/thread.hpp>
+
 #include <stdio.h>
 //#include <wfdb/wfdb.h>
 #include "wfdb.h"
@@ -79,9 +79,9 @@ This file must be linked with object files produced from:
 #include <pthread.h>
 #include "stdio.h"
 #include "qrsdet.h"		// For sample rate.
-
-#include "inputs.h"	/* list of records to analyze and definitions of
-			   ECG_DB_PATH and REC_COUNT */
+#include "config.h"
+//#include "inputs.h"	/* list of records to analyze and definitions of
+//			   ECG_DB_PATH and REC_COUNT */
 
 
 // External function prototypes.
@@ -101,12 +101,8 @@ void remove_extension(char* path);
 #else
 #define MAINTYPE void
 #endif
-//#define ECG_DB_PATH ". /home/healthwe2/mitdb"
-#define ECG_DB_PATH	". /mnt/hgfs/Software/mitdb"
-#define WRITE_PATH_0   "/home/healthwe2/mitdb/240/write";
-#define READ_PATH_0  "/home/healthwe2/mitdb/240/read";
 
-class TESTRECORD{
+/*class TESTRECORD{
 private:
     int modeltype[MAXTYPES];     //new create
     int modeltypenum[MAXTYPES];  //new create
@@ -124,54 +120,14 @@ public:
 private:
     void Initial();
 };
-
-void bankAgent()
+*/
+/*int main(int argc, char* argv[])
 {
-
-    int Records[] = {202,206,208,209,210,211,212,213,214,218,216};
-//        int Records[] = {202,206};
-    int REC_count1 = (sizeof(Records)/sizeof(int));
-    char name[100];
-    for(int i=0;i<REC_count1;i++)//REC_count1
-    {
-        TESTRECORD line0;
-        line0.Recordnum = Records[i];
-        snprintf(name,100,"/home/healthwe2/mitdb/240/read/2016-08/%d.dat",Records[i]);
-        //const char* path="240/240.dat";
-        line0.TestRecord(name);
-    }
-}
-
-void joe()
-{
-
-    int Records[] = {230,231,232,233,234,235,236,237,238,239,240};
-//    int Records[] = {230,231};
-    int REC_count1 = (sizeof(Records)/sizeof(int));
-    char name[100];
-    for(int i=0;i<REC_count1;i++)//REC_count1
-    {
-        TESTRECORD line0;
-        line0.Recordnum = Records[i];
-        snprintf(name,100,"/home/healthwe2/mitdb/240/read/2016-09/%d.dat",Records[i]);
-        //const char* path="240/240.dat";
-        line0.TestRecord(name);
-    }
-}
-
-int main()
-{
-    boost::thread thread1(bankAgent); // start concurrent execution of bankAgent
-    boost::thread thread2(joe); // start concurrent execution of bankAgent
-    thread1.join();
-    thread2.join();
-//    TESTRECORD line1;
-//    //line1.Recordnum = 2402;
-//    const char* path="/home/healthwe2/mitdb/240/read/2016-09/240.dat";
-//    line1.TestRecord(path);
+    TESTRECORD line;
+    line.TestRecord(argv[1]);
     return 0;
 }
-
+*/
 void TESTRECORD::Initial()
 {
     lasttime = 0;               //use in putann
@@ -186,8 +142,7 @@ void TESTRECORD::Initial()
 
 int TESTRECORD::TestRecord(const char *data_file_path)
 	{
-
-    int _MAX_PATH =500;
+    //int _MAX_PATH =500;
 
     char *data_file_name;
     char date_tmp[_MAX_PATH]; //XXX/201414/
@@ -207,10 +162,16 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     remove_extension(ecg_file_name);
     strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
     strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
-    //conf::Instance()->Get("write_path", WRITE_PATH);
-    //conf::Instance()->Get("read_path", READ_PATH);
-    WRITE_PATH = WRITE_PATH_0;
-    READ_PATH = READ_PATH_0;
+    //Configuration config;
+    //config.Load("/etc/healthme.conf");
+   // conf::Instance()->Get("write_path", WRITE_PATH);
+   // conf::Instance()->Get("read_path", READ_PATH);
+        //string WRITE_PATH,READ_PATH;
+        conf::Instance()->Load(SYS_CONF);
+        conf::Instance()->Get("write_path", WRITE_PATH);
+        conf::Instance()->Get("read_path", READ_PATH);
+   // WRITE_PATH = "/opt/ecgData";//WRITE_PATH_0;
+   // READ_PATH = "/opt/ecgAnn";//READ_PATH_0;
     snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
     snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
     //sprintf(ecg_AF_file_path, "%s/%s/%s.af", WRITE_PATH.c_str(), date_path, ecg_file_name);
@@ -247,222 +208,228 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     lasttime =0;
 
     //write to annot
-    WFDB_Annotation annot ;
-    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+        WFDB_Annotation annot ;
+        FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
 
-    // Open a 1 channel record
-    //read record
+         // Open a 1 channel record
+       //read record
 
-    FILE* filed = fopen(data_file_path,"rb+");//
-    if(!filed){
-        printf("please check the file:%s!",data_file_path);
-        return 0;
-    }
-    fseek(filed,0,2);
-    long flend=ftell(filed); // 得到文件大小
-    int lengthd = flend/3;
-    int posd=0;
-    char* lpc = new char[flend];//(char *) malloc(flend);//
-    fseek(filed, 0, SEEK_SET);
-    fread(lpc, flend,1,filed);
-    int dataIN;
-    int dataOUT;
+        FILE* filed = fopen(data_file_path,"r");//
+         if(!filed){
+             printf("please check the file:%s!",data_file_path);
+             return 0;
+         }
+         fseek(filed,0,2);
+         long flend=ftell(filed); // 得到文件大小
+         int lengthd = flend/3;
+         int posd=0;
+         char* lpc = new char[flend];//(char *) malloc(flend);//
+         fseek(filed, 0, SEEK_SET);
+         fread(lpc, flend,1,filed);
+         int dataIN;
+         int dataOUT;
 
-    int file2c_lsize = flend*2;
-    FILE* fp = fopen(ecg_filtered_data_file_path,"w");//
-    if (fp == NULL){
-        printf("can't open the output 2-channel file!");
-        return 0;
-    }
+         int file2c_lsize = flend*2;
+         FILE* fp = fopen(ecg_filtered_data_file_path,"w");//
+         if (fp == NULL){
+             printf("can't open the output 2-channel file!");
+             return 0;
+         }
 
-    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
-    char* lpc2 = (char *) buf;
+         char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
+         char* lpc2 = (char *) buf;
 
-        //write the head file
-    FILE *filehea = fopen(ecg_head_file_path, "w");
-    int sNum = 2;
-    float sr = 128;
-    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
-    int eNum = 0;
-    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
-    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc,
-                  0, "v5");
-    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0,
-                  "v5");
-    fclose(filehea);
+             //write the head file
+         FILE *filehea = fopen(ecg_head_file_path, "w");
+         int sNum = 2;
+         float sr = 128;
+         int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, 0);//file2c_lsize);
+         int eNum = 0;
+         int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+         res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc,
+                       0, "v5");
+         res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0,
+                       "v5");
+         fclose(filehea);
 
-   // Initialize beat detection and classification.
-    BDAC bdac;
-    bdac.ResetBDAC() ;                                                   //bdac.c
+        // Initialize beat detection and classification.
+         BDAC bdac;
+         bdac.ResetBDAC() ;                                                   //bdac.c
 
-    // Read data from MIT/BIH file until tre is none left.
-    while( posd < lengthd)  //local
-    {
-       // NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,0 );      //local
-        if(SampleCount%2==0){
-            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
-        }
-        else{
-            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
-            posd++;
-        }
+         // Read data from MIT/BIH file until tre is none left.
+         while( posd < lengthd)  //local
+         {
+            // NextSample2(ecgd,1,InputFileSampleFrequency,SAMPLE_RATE,0 );      //local
+             if(SampleCount%2==0){
+                 dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+             }
+             else{
+                 dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+                 posd++;
+             }
 
-        if (dataIN & 0x800)
-            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
-        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+             if (dataIN & 0x800)
+                 dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+             else dataIN &= 0xfff;        //positive data, make all the hight bit 0
 
-        ++SampleCount ;
+             ++SampleCount ;
 
-        // Pass sample to beat detection and classification.
+             // Pass sample to beat detection and classification.
 
-        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+             delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
 
-        // If a beat was detected, annotate the beat location
-        // and type.
-        dataOUT = bdac.qrsdet1.datafilt;
-        lpc2[0] = LOBYTE((short) dataIN);
-        lpc2[1] = 0;
-        lpc2[1] = HIBYTE((short) dataIN) & 0x0f;
-        lpc2[2] = LOBYTE((short) dataOUT);
-        lpc2[1] |= HIBYTE((short) dataOUT) << 4;
-        lpc2 += 3;
+             // If a beat was detected, annotate the beat location
+             // and type.
+             dataOUT = bdac.qrsdet1.datafilt;
+             lpc2[0] = LOBYTE((short) dataOUT);
+             lpc2[1] = 0;
+             lpc2[1] = HIBYTE((short) dataOUT) & 0x0f;
+             lpc2[2] = LOBYTE((short) dataIN);
+             lpc2[1] |= HIBYTE((short) dataIN) << 4;
+             lpc2 += 3;
+          /*   lpc2[0] = LOBYTE((short) dataIN);
+             lpc2[1] = 0;
+             lpc2[1] = HIBYTE((short) dataIN) & 0x0f;
+             lpc2[2] = LOBYTE((short) dataOUT);
+             lpc2[1] |= HIBYTE((short) dataOUT) << 4;
+             lpc2 += 3;
+*/
+             if(delay != 0)
+             {
+                 DetectionTime = SampleCount - delay ;
 
-        if(delay != 0)
-        {
-            DetectionTime = SampleCount - delay ;
+                 // Convert sample count to input file sample
+                 // rate.
+                 DetectionTime *= InputFileSampleFrequency ;
+                 DetectionTime /= SAMPLE_RATE ;
+                 annot.time = DetectionTime ;
+                 annot.anntyp = beatType ;
+                 annot.aux = NULL ;
+                 putann2(fileann,&annot,lasttime,0);
 
-            // Convert sample count to input file sample
-            // rate.
-            DetectionTime *= InputFileSampleFrequency ;
-            DetectionTime /= SAMPLE_RATE ;
-            annot.time = DetectionTime ;
-            annot.anntyp = beatType ;
-            annot.aux = NULL ;
-            putann2(fileann,&annot,lasttime,0);
-
-            //BEGIN TO WRITE THE TMP
-            int morphTypenew = bdac.match1.morphType;
-            if(beatType == 13){//Q
-                if(m_clusters.size()<1){
-                    m_type.push_back(beatType);
-                    std::vector<int> newvec;
-                    newvec.push_back(DetectionTime);
-                    m_clusters.push_back(newvec);
-                }
-                else
-                {
-                    m_clusters[0].push_back(DetectionTime);
-                }
-            }
-            else if(bdac.match1.lastBeatWasNew == 1 )
-            {
-                if(m_type.size()<=MAXTYPES) {
-                    modeltype[m_type.size()-1] = beatType;
-                    modeltypenum[m_type.size()-1] = m_type.size();
-                }
-                else{
-                    modeltype[morphTypenew] = beatType;
-                    modeltypenum[morphTypenew] = m_type.size();
-                }
-                m_type.push_back(beatType);
-                std::vector<int> newvec;
-                newvec.push_back(DetectionTime);
-                m_clusters.push_back(newvec);
-            }
-            else {
-                int numtypeout = modeltypenum[morphTypenew];
-                if (m_type[numtypeout]==beatType) {
-                   m_clusters[numtypeout].push_back(DetectionTime);
-                }
-                else{
-                    if(modeltypev[morphTypenew]==0){
-                        m_type.push_back(beatType);
-                        modeltypev[morphTypenew]= m_type.size()-1;
-                        std::vector<int> newvec;
-                        newvec.push_back(DetectionTime);
-                        m_clusters.push_back(newvec);
-                    }
-                    else{
-                        numtypeout = modeltypev[morphTypenew];
+                 //BEGIN TO WRITE THE TMP
+                 int morphTypenew = bdac.match1.morphType;
+                 if(beatType == 13){//Q
+                     if(m_clusters.size()<1){
+                         m_type.push_back(beatType);
+                         std::vector<int> newvec;
+                         newvec.push_back(DetectionTime);
+                         m_clusters.push_back(newvec);
+                     }
+                     else
+                     {
+                         m_clusters[0].push_back(DetectionTime);
+                     }
+                 }
+                 else if(bdac.match1.lastBeatWasNew == 1 )
+                 {
+                     if(m_type.size()<=MAXTYPES) {
+                         modeltype[m_type.size()-1] = beatType;
+                         modeltypenum[m_type.size()-1] = m_type.size();
+                     }
+                     else{
+                         modeltype[morphTypenew] = beatType;
+                         modeltypenum[morphTypenew] = m_type.size();
+                     }
+                     m_type.push_back(beatType);
+                     std::vector<int> newvec;
+                     newvec.push_back(DetectionTime);
+                     m_clusters.push_back(newvec);
+                 }
+                 else {
+                     int numtypeout = modeltypenum[morphTypenew];
+                     if (m_type[numtypeout]==beatType) {
                         m_clusters[numtypeout].push_back(DetectionTime);
-                    }
-                }
-            }
-        }
-    }
+                     }
+                     else{
+                         if(modeltypev[morphTypenew]==0){
+                             m_type.push_back(beatType);
+                             modeltypev[morphTypenew]= m_type.size()-1;
+                             std::vector<int> newvec;
+                             newvec.push_back(DetectionTime);
+                             m_clusters.push_back(newvec);
+                         }
+                         else{
+                             numtypeout = modeltypev[morphTypenew];
+                             m_clusters[numtypeout].push_back(DetectionTime);
+                         }
+                     }
+                 }
+             }
+         }
 
-    fwrite( buf, sizeof(char), file2c_lsize, fp);
-    fclose(fp);
-    delete[]buf;
-    delete[]lpc;
+         fwrite( buf, sizeof(char), file2c_lsize, fp);
+         fclose(fp);
+         //delete[]buf;
+         delete[]lpc;
 
-    printf("Record,%s,%d\n",data_file_name,m_type.size());
-    wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
-    fclose(fileann);//CLOSE WRITE THE ATEST FILE
-    fclose(filed); //CLOSE THE DAT FILE
+         printf("Record:%s,%d\n",data_file_name,m_type.size());
+        wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+         fclose(fileann);//CLOSE WRITE THE ATEST FILE
+         fclose(filed); //CLOSE THE DAT FILE
 
-    // Write the new address book back to disk.
-    int Nnum = 0, Vnum=0, Anum = 0;
-    int countN = 0,countV = 0,countA=0;
-    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
-    for (int j = 0; j < m_type.size(); ++j)
-    {
-        int type = m_type[j];
-        //printf("%d\t%d\t%d\n",j,type,m_clusters[j].size());
-        Template1 *tmp1;
-        int numID = 0;
-        if(1 == type)
-        {
-            tmp1 = tmpN->add_template1s();
-            numID = Nnum++;
-            countN += m_clusters[j].size();
-        }
-        else if(5 == type){
-            tmp1 = tmpV->add_template1s();
-            numID = Vnum++;
-            countV += m_clusters[j].size();
-        }
-        else{
-            tmp1 = tmpA->add_template1s();
-            numID = Anum++;
-            countA += m_clusters[j].size();
-        }
+         // Write the new address book back to disk.
+         int Nnum = 0, Vnum=0, Anum = 0;
+         int countN = 0,countV = 0,countA=0;
+         fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+         for (int j = 0; j < m_type.size(); ++j)
+         {
+             int type = m_type[j];
+             //printf("%d\t%d\t%d\n",j,type,m_clusters[j].size());
+             Template1 *tmp1;
+             int numID = 0;
+             if(1 == type)
+             {
+                 tmp1 = tmpN->add_template1s();
+                 numID = Nnum++;
+                 countN += m_clusters[j].size();
+             }
+             else if(5 == type){
+                 tmp1 = tmpV->add_template1s();
+                 numID = Vnum++;
+                 countV += m_clusters[j].size();
+             }
+             else{
+                 tmp1 = tmpA->add_template1s();
+                 numID = Anum++;
+                 countA += m_clusters[j].size();
+             }
 
-        Template2 *tmp2 = tmp1->add_template2s();
-        tmp2->set_id(numID);
-        for(int k=0;k<m_clusters[j].size();k++){
-            tmp2->add_positions_of_beats(m_clusters[j][k]);
-        }
-    }
+             Template2 *tmp2 = tmp1->add_template2s();
+             tmp2->set_id(numID);
+             for(int k=0;k<m_clusters[j].size();k++){
+                 tmp2->add_positions_of_beats(m_clusters[j][k]);
+             }
+         }
 
-    if (!tmp.SerializeToOstream(&tempfile)) {
-        cerr << "Failed to write address book." << endl;
-        return -1;
-    }
-    google::protobuf::ShutdownProtobufLibrary();
+         if (!tmp.SerializeToOstream(&tempfile)) {
+             cerr << "Failed to write address book." << endl;
+             return -1;
+         }
+         google::protobuf::ShutdownProtobufLibrary();
 
-    return 0;
-	}
+         return 0;
+         }
 
 
-char *get_file_name(const char *path) {
-    char *ssc;
-    int l = 0;
-    char *name = (char *) path;
-    ssc = strstr(name, "/");
-    while (ssc) {
-        l = strlen(ssc) + 1;
-        name = &name[strlen(name) - l + 2];
-        ssc = strstr(name, "/");
-    };
-    return name;
-}
+     char *get_file_name(const char *path) {
+         char *ssc;
+         int l = 0;
+         char *name = (char *) path;
+         ssc = strstr(name, "/");
+         while (ssc) {
+             l = strlen(ssc) + 1;
+             name = &name[strlen(name) - l + 2];
+             ssc = strstr(name, "/");
+         };
+         return name;
+     }
 
-void remove_extension(char* path) {
-    for (int i = (int) strlen(path) - 1; i > 0; i--) {
-        if (path[i] == '.') {
-            path[i] = 0;
-            return;
-        }
-    }
-}
+     void remove_extension(char* path) {
+         for (int i = (int) strlen(path) - 1; i > 0; i--) {
+             if (path[i] == '.') {
+                 path[i] = 0;
+                 return;
+             }
+         }
+     }
