@@ -134,19 +134,73 @@ ResetMatch() resets static variables involved with template matching.
 
 void MATCHcls::ResetMatch(void)
 //void ResetMatch(void)
-	{
-	int i, j ;
+{
 	TypeCount = 0 ;
-	for(i = 0; i < MAXTYPES; ++i)
+	for(int i = 0; i < MAXTYPES; ++i)
 		{
 		BeatCounts[i] = 0 ;
 		BeatClassifications[i] = UNKNOWN ;
-		for(j = 0; j < MAXTYPES; ++j)
+		for(int j = 0; j < MAXTYPES; ++j)
 			{
 			MIs[i][j] = 0 ;
 			}
 		}
+	//match
+	for(int i=0;i<MAXTYPES;i++)
+	{
+		for(int j=0;j<BEATLGTH;j++)
+		{
+			BeatTemplates[i][j] ;
+		}
+		BeatWidths[i] = 0 ;
+		BeatBegins[i] = 0 ;
+		BeatEnds[i] = 0 ;
+		BeatsSinceLastMatch[i] = 0 ;
+		BeatAmps[i] = 0 ;
+		BeatCenters[i] = 0 ;
+
 	}
+	TypeCount = 0;
+	//classify
+	DomType  = 0 ;
+	for(int i=0;i<MAXTYPES;i++)
+	{
+		RecentRRs[i] = 0 ;
+		RecentTypes[i] = 0 ;
+	}
+	rythmcnk.ResetRhythmChk();
+	//DomMonitor()
+	NewDom = 0 ;
+	DomRhythm = 0 ;
+	for(int i=0;i<DM_BUFFER_LENGTH;i++)
+	{
+		DMBeatTypes[i] = 0 ;
+		DMBeatClasses[i] = 0 ;
+		DMBeatRhythms[i] = 0 ;
+	}
+    for(int i=0;i<MAXTYPES;i++)
+	{
+		DMNormCounts[i] = 0 ;
+		DMBeatCounts[i] = 0 ;
+	}
+	DMIrregCount = 0 ;
+	brIndex = 0 ;
+	morphType = 0 ;
+	runCount = 0 ;
+	lastIsoLevel = 0 , lastRhythmClass = 0 , lastBeatWasNew = 0;
+	//postclas
+	for(int i=0;i<MAXTYPES;i++)
+	{
+		for(int j=0;j<MAXPREV;j++)
+		{
+			PostClass[i][j],
+			PCRhythm[i][j] ;
+		}
+	}
+	PCInitCount = 0;
+	lastRC = 0 , lastWidth = 0 ;
+	lastMI2 = 0;
+}
 
 /**************************************************************************
 	CompareBeats() takes two beat buffers and compares how well they match

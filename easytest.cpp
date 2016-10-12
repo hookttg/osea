@@ -162,16 +162,10 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     remove_extension(ecg_file_name);
     strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
     strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
-    //Configuration config;
-    //config.Load("/etc/healthme.conf");
-   // conf::Instance()->Get("write_path", WRITE_PATH);
-   // conf::Instance()->Get("read_path", READ_PATH);
-        //string WRITE_PATH,READ_PATH;
+
         conf::Instance()->Load(SYS_CONF);
         conf::Instance()->Get("write_path", WRITE_PATH);
         conf::Instance()->Get("read_path", READ_PATH);
-   // WRITE_PATH = "/opt/ecgData";//WRITE_PATH_0;
-   // READ_PATH = "/opt/ecgAnn";//READ_PATH_0;
     snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
     snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
     //sprintf(ecg_AF_file_path, "%s/%s/%s.af", WRITE_PATH.c_str(), date_path, ecg_file_name);
@@ -208,8 +202,9 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     lasttime =0;
 
     //write to annot
-        WFDB_Annotation annot ;
-        FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+    WFDB_Annotation annot ;
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+
 
          // Open a 1 channel record
        //read record
@@ -243,7 +238,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
          FILE *filehea = fopen(ecg_head_file_path, "w");
          int sNum = 2;
          float sr = 128;
-         int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, 0);//file2c_lsize);
+         int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
          int eNum = 0;
          int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
          res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc,

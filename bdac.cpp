@@ -99,7 +99,13 @@ int InitBeatFlag = 1 ;
 
 void BDAC::ResetBDAC(void)
 	{
-	int dummy ;
+		//NOISEcls noise1;
+		noise1.ResetNOISE();
+		//QRSdetcls qrsdet1;
+		qrsdet1.ResetQRSdet();
+		//MATCHcls match1;
+		match1.ResetMatch();
+	int dummy = 0 ;
     //qrsdetclassone.QRSDet(0,1) ;	// Reset the qrs detector
         qrsdet1.QRSDet(0,1) ;	// Reset the qrs detector
 	RRCount = 0 ;
@@ -107,6 +113,7 @@ void BDAC::ResetBDAC(void)
 	match1.Classify(BeatBuffer,0,0,&dummy,&dummy,1) ;
 	InitBeatFlag = 1 ;
     BeatQueCount = 0 ;	// Flush the beat que.
+
 	}
 
 /*****************************************************************************
@@ -242,7 +249,7 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 		fidAdj = MS80 ;
 	else if(fidAdj < -MS80)
 		fidAdj = -MS80 ;
-
+    fidAdj = 0;
 	return(detectDelay-fidAdj) ;
 	}
 

@@ -96,6 +96,45 @@ const int MEMMOVELEN = 7*sizeof(int);
 	int QRSDet( int datum, int init );
 };*/
 
+void QRSdetcls::ResetQRSdet()
+{
+    for(int i=0;i<DER_DELAY;i++)
+    {
+        DDBuffer[i]= 0;
+    }
+    DDPtr = 0 ;
+    Dly = 0 ;
+    det_thresh = 0 ;
+    qpkcnt ;
+    for(int i=0;i<MAXBUFFERS;i++)
+    {
+        qrsbuf[i] = 0 ;
+        noise[i] = 0 ;
+        rrbuf[i] = 0 ;
+        rsetBuff[i] = 0 ;
+    }
+    rsetCount = 0 ;
+    nmean = 0 ;
+    qmean = 0 ;
+    rrmean = 0 ;
+    count = 0 ;
+    sbpeak = 0 ;
+    sbloc = 0 ;
+    sbcount = 0 ;
+    maxder = 0 ;
+    lastmax = 0 ;
+    initBlank = 0 ;
+    initMax = 0 ;
+    preBlankCnt = 0 ;
+    tempPeak  = 0 ;
+    max = 0 ;
+    timeSinceMax = 0 ;
+    lastDatum = 0 ;
+    //QRSFILTcls qrsfilt1;
+    datafilt = 0 ;
+    qrsfilt1.ResetFilter();
+}
+
 int QRSdetcls::QRSFilter(int datum,int init)
 {
 	int fdatum ;
@@ -109,10 +148,15 @@ int QRSdetcls::QRSFilter(int datum,int init)
         Dly = 0;
 	}
 	fdatum = qrsfilt1.lpfilt( datum, 0 ) ;		// Low pass filter data.
+	//datafilt = fdatum;
 	fdatum = qrsfilt1.hpfilt( fdatum, 0 ) ;	// High pass filter data.
+	datafilt = fdatum;
 	fdatum = qrsfilt1.deriv2( fdatum, 0 ) ;	// Take the derivative.
+	//datafilt = fdatum;
 	fdatum = fabs(fdatum) ;				// Take the absolute value.
+	//datafilt = fdatum;
 	fdatum = qrsfilt1.mvwint( fdatum, 0 ) ;	// Average over an 80 ms window .
+	//datafilt = fdatum;
 	return(fdatum) ;
 }
 
@@ -149,7 +193,7 @@ int QRSdetcls::QRSDet( int datum, int init )
 		}
 
 	fdatum = QRSFilter(datum,0) ;	/* Filter data. */           //qrsfilt.c
-    datafilt = fdatum;
+	//datafilt = fdatum;
 
 	/* Wait until normal detector is ready before calling early detections. */
 

@@ -83,9 +83,16 @@ int BigeminyFlag ;
 
 //void ResetRhythmChk(void)
 void RYTHMCHKcls::ResetRhythmChk(void)
+{
+	for(int i=0;i<RBB_LENGTH;i++)
 	{
+		RRBuffer[i] = 0 ;
+		RRTypes[i] = 0 ;
+	}
+	BigeminyFlag  = 0;
 	BeatCount = 0 ;
 	ClassifyState = LEARNING ;
+
 	}
 
 /*****************************************************************************

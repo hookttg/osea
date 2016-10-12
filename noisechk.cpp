@@ -41,6 +41,15 @@ This file contains functions for evaluating the noise content of a beat.
 //int NoiseBuffer[NB_LENGTH], NBPtr = 0 ;//
 //int NoiseEstimate ;
 
+void NOISEcls::ResetNOISE()
+{
+	NBPtr = 0 ;
+	NoiseEstimate = 0 ;
+	for(int i=0;i<NB_LENGTH;i++)
+	{
+		NoiseBuffer[i]= 0;
+	}
+}
 /************************************************************************
 	GetNoiseEstimate() allows external access the present noise estimate.
 	this function is only used for debugging.
