@@ -38,8 +38,10 @@ MA 02143 USA).  For updates to this software, please visit our website
 using namespace temp;
 using namespace std;
 
-#define SYS_CONF "/etc/healthme.conf"
-#define DIST_CONF  "/etc/healthme/dist.txt"
+#define SYS_CONF "/home/healthwe2/Desktop/osea/osea-firstserver/etc/healthme.conf"
+#define DIST_CONF  "/home/healthwe2/Desktop/osea/osea-firstserver/etc/healthme/dist.txt"
+//#define SYS_CONF "/etc/healthme.conf"
+//#define DIST_CONF  "/etc/healthme/dist.txt"
 //#define MS_PER_SAMPLE	(  1000/  SAMPLE_RATE)
 #define MS10	( (10*SAMPLE_RATE+500)/ 1000 )
 #define MS25	( (25*SAMPLE_RATE+500)/ 1000 )
@@ -99,11 +101,13 @@ public:
     int deriv1( int x0, int init ) ;
     int deriv2( int x0, int init ) ;
     int mvwint(int datum, int init) ;
+    void ResetFilter();
 };
 
 class QRSdetcls{
-private:
-    int DDBuffer[DER_DELAY], DDPtr ;	/* Buffer holding derivative data. */
+public:
+    int DDBuffer[DER_DELAY];
+    int DDPtr ;	/* Buffer holding derivative data. */
     int Dly ;// = 0 ;
 
 
@@ -116,16 +120,17 @@ private:
     int maxder, lastmax ;
     int initBlank, initMax ;
     int preBlankCnt, tempPeak ;
-
     int max , timeSinceMax , lastDatum ;
 
-private:
+public:
     QRSFILTcls qrsfilt1;
+    void ResetQRSdet();
+    int datafilt;
     int QRSFilter(int datum,int init);
     int Peak( int datum, int init );
 
 public:
-    int datafilt;
+
     int QRSDet( int datum, int init );
 };
 
@@ -133,9 +138,11 @@ public:
 
 class NOISEcls{
 private:
-    int NoiseBuffer[NB_LENGTH], NBPtr = 0 ;//
+    int NoiseBuffer[NB_LENGTH];
+    int NBPtr;
     int NoiseEstimate ;
 public:
+    void ResetNOISE();
     int GetNoiseEstimate();
     int NoiseCheck(int datum, int delay, int RR, int beatBegin, int beatEnd);
 };
@@ -252,8 +259,9 @@ class BDAC{
 private:
     NOISEcls noise1;
 public:
-    MATCHcls match1;
     QRSdetcls qrsdet1;
+    MATCHcls match1;
+
 private:
     int ECGBuffer[ECG_BUFFER_LENGTH], ECGBufferIndex;  // Circular data buffer.
     int BeatBuffer[BEATLGTH] ;                              //100

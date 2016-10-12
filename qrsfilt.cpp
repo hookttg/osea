@@ -120,6 +120,43 @@ public:
 	return(fdatum) ;
 	}
 */
+void QRSFILTcls::ResetFilter()
+{
+	//lpfilt
+	lpfilt_y1 = 0 ;
+	lpfilt_y2 = 0 ;
+	for(int i=0;i<LPBUFFER_LGTH;i++)
+	{
+		lpfilt_data[i] = 0 ;
+	}
+	lpfilt_ptr = 0 ;
+	//hpfilt
+	hpfilt_y = 0 ;
+	for(int i=0;i<HPBUFFER_LGTH;i++)
+	{
+		hpfilt_data[i] = 0;
+	}
+	hpfilt_ptr = 0 ;
+	//derive1
+	for(int i=0;i<DERIV_LENGTH;i++)
+	{
+		deriv1_derBuff[i] = 0 ;
+	}
+	deriv1_derI = 0 ;
+	//deriv2
+	for(int i=0;i<DERIV_LENGTH;i++)
+	{
+		deriv2_derBuff[i] = 0 ;
+	}
+	deriv2_derI = 0 ;
+	//mvwint
+	mvwint_sum = 0 ;
+	for(int i=0;i<WINDOW_WIDTH;i++)
+	{
+		mvwint_data[i] = 0;
+	}
+	mvwint_ptr = 0;
+}
 /*************************************************************************
 *  lpfilt() implements the digital filter represented by the difference
 *  equation:
