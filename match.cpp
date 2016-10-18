@@ -286,7 +286,7 @@ double CompareBeats(int *beat1, int *beat2, int *shiftAdj)
 	// algorithm was originally tuned with a match
 	// length of 30.
 
-	metric *= 30 ;
+	metric *= 0.15*SAMPLE_RATE ;//30
 	metric /= MATCH_LENGTH ;
 	return(metric) ;
 	}
@@ -360,7 +360,7 @@ double CompareBeats2(int *beat1, int *beat2, int *shiftAdj)
 	// algorithm was originally tuned with a match
 	// length of 30.
 
-	metric *= 30 ;
+	metric *= 0.15*SAMPLE_RATE ;//30
 	metric /= MATCH_LENGTH ;
 
 	return(metric) ;

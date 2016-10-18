@@ -249,7 +249,7 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 		fidAdj = MS80 ;
 	else if(fidAdj < -MS80)
 		fidAdj = -MS80 ;
-    fidAdj = 0;
+    //fidAdj = 0;
 	return(detectDelay-fidAdj) ;
 	}
 

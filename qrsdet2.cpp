@@ -163,15 +163,6 @@ int QRSdetcls::QRSFilter(int datum,int init)
 int QRSdetcls::QRSDet( int datum, int init )
 	{
         //staitc to class
-/*	static int det_thresh, qpkcnt = 0 ;
-	static int qrsbuf[8], noise[8], rrbuf[8] ;
-	static int rsetBuff[8], rsetCount = 0 ;
-	static int nmean, qmean, rrmean ;
-	static int count, sbpeak = 0, sbloc, sbcount = MS1500 ;
-	static int maxder, lastmax ;
-	static int initBlank, initMax ;
-	static int preBlankCnt, tempPeak ;
-*/
     int fdatum, QrsDelay = 0 ;
 	int i, newPeak, aPeak ;
 
@@ -249,6 +240,7 @@ int QRSdetcls::QRSDet( int datum, int init )
 			qrsbuf[qpkcnt] = initMax ;
 			initMax = 0 ;
 			++qpkcnt ;
+
 			if(qpkcnt == MAXBUFFERS)
 				{
 				qmean = mean( qrsbuf, MAXBUFFERS ) ;             //local
@@ -259,7 +251,8 @@ int QRSdetcls::QRSDet( int datum, int init )
 				}
 			}
 		if( newPeak > initMax )
-			initMax = newPeak ;
+            initMax = newPeak ;
+
 		}
 
 	else	/* Else test for a qrs. */

@@ -88,6 +88,7 @@ This file must be linked with object files produced from:
 //void wfdb_read(FILE *fd_reader, int pos, int size, short buffer[]);
 int putann2(FILE *fp, WFDB_Annotation *annot, long &last_time,int shift_offset);
 void wfdb_p16(unsigned int x, FILE *fp);
+//void write_tmp(char* filename,Template* tmp,std::vector< std::vector<int> > m_clusters, std::vector<int> m_type);
 //void ResetBDAC(void) ;//bdac.c
 //int BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch) ;//bdac.c
 
@@ -266,7 +267,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
              if (dataIN & 0x800)
                  dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
              else dataIN &= 0xfff;        //positive data, make all the hight bit 0
-
+             //printf("SampleCount:%d\n",SampleCount);
              ++SampleCount ;
 
              // Pass sample to beat detection and classification.
@@ -276,21 +277,24 @@ int TESTRECORD::TestRecord(const char *data_file_path)
              // If a beat was detected, annotate the beat location
              // and type.
              dataOUT = bdac.qrsdet1.datafilt;
-             lpc2[0] = LOBYTE((short) dataOUT);
-             lpc2[1] = 0;
-             lpc2[1] = HIBYTE((short) dataOUT) & 0x0f;
-             lpc2[2] = LOBYTE((short) dataIN);
-             lpc2[1] |= HIBYTE((short) dataIN) << 4;
-             lpc2 += 3;
-          /*   lpc2[0] = LOBYTE((short) dataIN);
-             lpc2[1] = 0;
-             lpc2[1] = HIBYTE((short) dataIN) & 0x0f;
-             lpc2[2] = LOBYTE((short) dataOUT);
-             lpc2[1] |= HIBYTE((short) dataOUT) << 4;
-             lpc2 += 3;
+                 lpc2[0] = LOBYTE((short) dataOUT);
+                 lpc2[1] = 0;
+                 lpc2[1] = HIBYTE((short) dataOUT) & 0x0f;
+                 lpc2[2] = LOBYTE((short) dataIN);
+                 lpc2[1] |= HIBYTE((short) dataIN) << 4;
+                 lpc2 += 3;
+            /*      lpc2[0] = LOBYTE((short) dataIN);
+                 lpc2[1] = 0;
+                 lpc2[1] = HIBYTE((short) dataIN) & 0x0f;
+                 lpc2[2] = LOBYTE((short) dataOUT);
+                 lpc2[1] |= HIBYTE((short) dataOUT) << 4;
+                 lpc2 += 3;
 */
              if(delay != 0)
              {
+                 /*if(delay!=76){
+                     printf("delay = %d,SampleCount = %d\n",delay,SampleCount);
+                 }*/
                  DetectionTime = SampleCount - delay ;
 
                  // Convert sample count to input file sample
@@ -359,13 +363,19 @@ int TESTRECORD::TestRecord(const char *data_file_path)
          delete[]lpc;
 
          printf("Record:%s,%d\n",data_file_name,m_type.size());
-        wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+         wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
          fclose(fileann);//CLOSE WRITE THE ATEST FILE
          fclose(filed); //CLOSE THE DAT FILE
 
          // Write the new address book back to disk.
          int Nnum = 0, Vnum=0, Anum = 0;
          int countN = 0,countV = 0,countA=0;
+         bool Nfind1 = false;
+         int Nfind1ID = 0;
+         bool Vfind1 = false;
+         int Vfind1ID = 0;
+         bool Afind1 = false;
+         int Afind1ID = 0;
          fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
          for (int j = 0; j < m_type.size(); ++j)
          {
@@ -375,28 +385,112 @@ int TESTRECORD::TestRecord(const char *data_file_path)
              int numID = 0;
              if(1 == type)
              {
-                 tmp1 = tmpN->add_template1s();
-                 numID = Nnum++;
-                 countN += m_clusters[j].size();
+                 if(m_clusters[j].size()>MERRGENUM){
+                     tmp1 = tmpN->add_template1s();
+                     numID = Nnum++;
+                     countN += m_clusters[j].size();
+                 }
+                 else
+                 {
+                     if(!Nfind1){
+                         Nfind1 = true;
+                         Nfind1ID = j;
+                     }
+                     else{
+                         for (int k = 0; k < MERRGENUM; ++k) {
+                             m_clusters[Nfind1ID].push_back(m_clusters[j][k]);
+                         }
+                     }
+                 }
              }
              else if(5 == type){
-                 tmp1 = tmpV->add_template1s();
-                 numID = Vnum++;
-                 countV += m_clusters[j].size();
+                 if(m_clusters[j].size()>MERRGENUM)
+                 {
+                     tmp1 = tmpV->add_template1s();
+                     numID = Vnum++;
+                     countV += m_clusters[j].size();
+                 }
+                 else{
+                     if(!Vfind1){
+                         Vfind1 = true;
+                         Vfind1ID = j;
+                     }
+                     else{
+                         for (int k = 0; k < MERRGENUM; ++k) {
+                             m_clusters[Vfind1ID].push_back(m_clusters[j][k]);
+                         }
+                     }
+                 }
              }
              else{
-                 tmp1 = tmpA->add_template1s();
-                 numID = Anum++;
-                 countA += m_clusters[j].size();
+                 if(m_clusters[j].size()>MERRGENUM)
+                 {
+                     tmp1 = tmpA->add_template1s();
+                     numID = Anum++;
+                     countA += m_clusters[j].size();
+                 }
+                 else{
+                     if(!Afind1){
+                         Afind1 = true;
+                         Afind1ID = j;
+                     }
+                     else{
+                         for (int k = 0; k < MERRGENUM; ++k) {
+                             m_clusters[Afind1ID].push_back(m_clusters[j][k]);
+                         }
+                     }
+                 }
              }
-
-             Template2 *tmp2 = tmp1->add_template2s();
-             tmp2->set_id(numID);
-             for(int k=0;k<m_clusters[j].size();k++){
-                 tmp2->add_positions_of_beats(m_clusters[j][k]);
+             if(m_clusters[j].size()>MERRGENUM)
+             {
+                 Template2 *tmp2 = tmp1->add_template2s();
+                 tmp2->set_id(numID);
+                 for(int k=0;k<m_clusters[j].size();k++)
+                 {
+                     tmp2->add_positions_of_beats(m_clusters[j][k]);
+                 }
              }
          }
-
+         if(Nfind1 == true)
+         {
+             Template1 *tmp1;
+             tmp1 = tmpN->add_template1s();
+             int numID = Nnum++;
+             countN += m_clusters[Nfind1ID].size();
+             Template2 *tmp2 = tmp1->add_template2s();
+             tmp2->set_id(numID);
+             for(int k=0;k<m_clusters[Nfind1ID].size();k++)
+             {
+                 tmp2->add_positions_of_beats(m_clusters[Nfind1ID][k]);
+             }
+         }
+        if(Vfind1 == true)
+        {
+            Template1 *tmp1;
+            tmp1 = tmpV->add_template1s();
+            int numID = Vnum++;
+            countV += m_clusters[Vfind1ID].size();
+            Template2 *tmp2 = tmp1->add_template2s();
+            tmp2->set_id(numID);
+            for(int k=0;k<m_clusters[Vfind1ID].size();k++)
+            {
+                tmp2->add_positions_of_beats(m_clusters[Vfind1ID][k]);
+            }
+        }
+        if(Afind1 == true)
+        {
+            Template1 *tmp1;
+            tmp1 = tmpA->add_template1s();
+            int numID = Anum++;
+            countA += m_clusters[Afind1ID].size();
+            Template2 *tmp2 = tmp1->add_template2s();
+            tmp2->set_id(numID);
+            for(int k=0;k<m_clusters[Afind1ID].size();k++)
+            {
+                tmp2->add_positions_of_beats(m_clusters[Afind1ID][k]);
+            }
+        }
+        printf("all tmp = %d\n", Anum + Vnum +Nnum);
          if (!tmp.SerializeToOstream(&tempfile)) {
              cerr << "Failed to write address book." << endl;
              return -1;
@@ -405,7 +499,10 @@ int TESTRECORD::TestRecord(const char *data_file_path)
 
          return 0;
          }
+void write_tmp(char* filename,Template* tmp)
+{
 
+}
 
      char *get_file_name(const char *path) {
          char *ssc;
