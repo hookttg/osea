@@ -1,4 +1,5 @@
 #include "qrsdet.h"		// For sample rate.
+#include "time.h"
 #include "string.h"
 #include "win.h"
 #include <stdio.h>

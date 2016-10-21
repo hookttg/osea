@@ -220,6 +220,8 @@ int TESTRECORD::TestRecord(const char *data_file_path)
          int lengthd = flend/3;
          int posd=0;
          char* lpc = new char[flend];//(char *) malloc(flend);//
+        int* INlpc = new int[lengthd*2];
+        int* OUTlpc = new int[lengthd*2];
          fseek(filed, 0, SEEK_SET);
          fread(lpc, flend,1,filed);
          int dataIN;
@@ -251,7 +253,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         // Initialize beat detection and classification.
          BDAC bdac;
          bdac.ResetBDAC() ;                                                   //bdac.c
-
+         int lpcount = 0;
          // Read data from MIT/BIH file until tre is none left.
          while( posd < lengthd)  //local
          {
@@ -274,16 +276,16 @@ int TESTRECORD::TestRecord(const char *data_file_path)
 
              delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
 
-             // If a beat was detected, annotate the beat location
-             // and type.
-             dataOUT = bdac.qrsdet1.datafilt;
-                 lpc2[0] = LOBYTE((short) dataOUT);
+             // If a beat was detected, annotate the beat location and type.
+             dataOUT =OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+             INlpc[lpcount++] = dataIN;
+             /*    lpc2[0] = LOBYTE((short) dataOUT);
                  lpc2[1] = 0;
                  lpc2[1] = HIBYTE((short) dataOUT) & 0x0f;
                  lpc2[2] = LOBYTE((short) dataIN);
                  lpc2[1] |= HIBYTE((short) dataIN) << 4;
                  lpc2 += 3;
-            /*      lpc2[0] = LOBYTE((short) dataIN);
+                  lpc2[0] = LOBYTE((short) dataIN);
                  lpc2[1] = 0;
                  lpc2[1] = HIBYTE((short) dataIN) & 0x0f;
                  lpc2[2] = LOBYTE((short) dataOUT);
@@ -356,11 +358,26 @@ int TESTRECORD::TestRecord(const char *data_file_path)
                  }
              }
          }
-
+        int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
+for(int i=0;i<lengthd*2;i++)
+{
+    int id = i+dif;
+    if(id>=lengthd*2){
+        id=lengthd*2-1;
+    }
+    lpc2[0] = LOBYTE((short) OUTlpc[id]);
+    lpc2[1] = 0;
+    lpc2[1] = HIBYTE((short) OUTlpc[id]) & 0x0f;
+    lpc2[2] = LOBYTE((short) INlpc[i]);
+    lpc2[1] |= HIBYTE((short) INlpc[i]) << 4;
+    lpc2 += 3;
+}
          fwrite( buf, sizeof(char), file2c_lsize, fp);
          fclose(fp);
          //delete[]buf;
          delete[]lpc;
+        delete[]INlpc;
+        delete[]OUTlpc;
 
          printf("Record:%s,%d\n",data_file_name,m_type.size());
          wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
