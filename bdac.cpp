@@ -55,7 +55,6 @@ Functions in bdac.cpp require functions in the following files:
 
 *******************************************************************************/
 #include "qrsdet.h"	// For base SAMPLE_RATE
-//#include "bdac.h"
 
 #define ECG_BUFFER_LENGTH	1000	// Should be long enough for a beat
 											// plus extra space to accommodate
@@ -67,30 +66,7 @@ Functions in bdac.cpp require functions in the following files:
 											// to classify the first beat in the que.
 
 // Internal function prototypes.
-
 void DownSampleBeat(int *beatOut, int *beatIn) ;
-
-// External function prototypes.
-
-//int QRSDet( int datum, int init ) ;                                                         //qrdet2.c
-//int NoiseCheck(int datum, int delay, int RR, int beatBegin, int beatEnd) ;                  //noisechk.c
-//int Classify(int *newBeat,int rr, int noiseLevel, int *beatMatch, int *fidAdj, int init) ;  //classify.c
-//int GetDominantType(void) ;                                                                 //match.c
-//int GetBeatEnd(int type) ;                                                                  //match.c
-//int GetBeatBegin(int type) ;                                                                //match.c
-int gcd(int x, int y) ;                                                                     //easytest.c
-
-// Global Variables
-
-/*
-int ECGBuffer[ECG_BUFFER_LENGTH], ECGBufferIndex = 0 ;  // Circular data buffer.
-int BeatBuffer[BEATLGTH] ;                              //100
-int BeatQue[BEAT_QUE_LENGTH], BeatQueCount = 0 ;  // Buffer of detection delays.
-int RRCount = 0 ;
-int InitBeatFlag = 1 ;
-*/
-//qrsdetclass qrsdetclassone;
-
 
 /******************************************************************************
 	ResetBDAC() resets static variables required for beat detection and
@@ -115,7 +91,43 @@ void BDAC::ResetBDAC(void)
     BeatQueCount = 0 ;	// Flush the beat que.
 
 	}
+void BDAC::NoiseCmp(int * noise)
+{
+	int noisecmp=0;
+	int k=0,n=0;
+	double sumecg = 0,sumecgfilt = 0;
+	double ecgmean=0,ecgfiltmean =0;
+	int dif=0;
+	n=ECGBufferIndex-106;
+	if(n<0)
+		n += ECG_BUFFER_LENGTH;
 
+	for(k=0;k<60;k++){
+		if(n == ECG_BUFFER_LENGTH)
+			n = 0;
+		sumecg += ECGBuffer[n];
+		sumecgfilt += ECGBufferfilt[n];
+		n++;
+	}
+	ecgmean = sumecg/60;
+	ecgfiltmean = sumecgfilt/60;
+	sumecg =0,sumecgfilt =0;
+	for(k=0;k<60;k++){
+		if(n == ECG_BUFFER_LENGTH)
+			n = 0;
+		dif=ECGBuffer[n]-ecgmean;
+		sumecg +=dif*dif;
+		dif = ECGBufferfilt[n]-ecgfiltmean;
+		sumecgfilt +=dif*dif;
+		n++;
+	}
+	if(sumecg>sumecgfilt)
+		noisecmp = (int)(sqrt(sumecg-sumecgfilt));
+	//else
+		//noisecmp = (int)(sqrt(sumecgfilt-sumecg));
+
+	*noise = noisecmp;
+}
 /*****************************************************************************
 Syntax:
 	int BeatDetectAndClassify(int ecgSample, int *beatType, *beatMatch) ;
@@ -134,18 +146,15 @@ Returns
 ****************************************************************************/
 int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 	{
-	int detectDelay, rr, i, j ;
-	int noiseEst = 0, beatBegin, beatEnd ;
-	int domType ;
-	int fidAdj ;
+	int detectDelay=0, rr=0, i=0, j=0 ;
+	int noiseEst = 0, beatBegin=0, beatEnd=0 ;
+	int domType=0 ;
+	int fidAdj=0 ;
 	int tempBeat[BEAT_DIV_SAMPLE*BEATLGTH] ;//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 
+        // Store new sample in the circular buffer.
 
-	// Store new sample in the circular buffer.
-
-	ECGBuffer[ECGBufferIndex] = ecgSample ; //ECGdata put in buffer   //local data
-	if(++ECGBufferIndex == ECG_BUFFER_LENGTH)//ECGdata index
-		ECGBufferIndex = 0 ;
+        ECGBuffer[ECGBufferIndex] = ecgSample ; //qrsdet1.datafilt;////ECGdata put in buffer   //local data
 
 	// Increment RRInterval count.
 
@@ -159,6 +168,10 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 	// Run the sample through the QRS detector.
 
 	detectDelay = qrsdet1.QRSDet(ecgSample,0) ;                           //qrsdet2.c
+	ECGBufferfilt[ECGBufferIndex] = qrsdet1.datafilt;
+	if(++ECGBufferIndex == ECG_BUFFER_LENGTH)//ECGdata index
+		ECGBufferIndex = 0 ;
+
 	if(detectDelay != 0)
 		{
 		BeatQue[BeatQueCount] = detectDelay ;
@@ -174,7 +187,9 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 		return 0 ;
 		}
 
-	// Otherwise classify the beat at the head of the que.
+
+
+        // Otherwise classify the beat at the head of the que.
 	rr = RRCount - BeatQue[0] ;	// Calculate the R-to-R interval
 	detectDelay = RRCount = BeatQue[0] ;
 
@@ -192,7 +207,9 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 		beatBegin = BEAT_DIV_SAMPLE*(FIDMARK-match1.GetBeatBegin(domType)) ;//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 		beatEnd = BEAT_DIV_SAMPLE*(match1.GetBeatEnd(domType)-FIDMARK) ;//(SAMPLE_RATE/BEAT_SAMPLE_RATE)
 		}
+
 	noiseEst = noise1.NoiseCheck(ecgSample,detectDelay,rr,beatBegin,beatEnd) ;//noisechk.c
+
 
 	// Copy the beat from the circular buffer to the beat buffer
 	// and reduce the sample rate by averageing pairs of data
@@ -249,7 +266,14 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 		fidAdj = MS80 ;
 	else if(fidAdj < -MS80)
 		fidAdj = -MS80 ;
-    //fidAdj = 0;
+
+	int noisecmp;
+		NoiseCmp(&noisecmp);
+    /*if(noisecmp>1000){
+			*beatType = 13 ;
+	}*/
+
+
 	return(detectDelay-fidAdj) ;
 	}
 

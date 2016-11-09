@@ -77,8 +77,6 @@ some level of encapsulation:
 #include <stdlib.h>
 #include <stdio.h>
 #include <wfdb/ecgcodes.h>
-
-//#include "bdac.h"
 #include "qrsdet.h"
 #define MATCH_LENGTH	BEAT_MS300	// Number of points used for beat matching.
 #define MATCH_LIMIT	1.2			// Match limit used testing whether two
@@ -104,36 +102,15 @@ int MinimumBeatVariation(int type) ;
 
 void AnalyzeBeat(int *beat, int *onset, int *offset, int *isoLevel,
 	int *beatBegin, int *beatEnd, int *amp) ;                         //analbeat.c
-//void AdjustDomData(int oldType, int newType) ;                        //classify.c
-//void CombineDomData(int oldType, int newType) ;                       //classify.c
 
-// Global variables.
-
-/*int BeatTemplates[MAXTYPES][BEATLGTH] ;
-int BeatCounts[MAXTYPES] ;
-int BeatWidths[MAXTYPES] ;
-int BeatClassifications[MAXTYPES] ;
-int BeatBegins[MAXTYPES] ;
-int BeatEnds[MAXTYPES] ;
-int BeatsSinceLastMatch[MAXTYPES] ;
-int BeatAmps[MAXTYPES] ;
-int BeatCenters[MAXTYPES] ;
-double MIs[MAXTYPES][MAXTYPES] ;
-int TypeCount = 0 ;
-// Need access to these in postclas.cpp when beat types are combined
-// and moved.
-*/
 extern int PostClass[MAXTYPES][MAXPREV] ;
 extern int PCRhythm[MAXTYPES][MAXPREV] ;
-
-
 
 /***************************************************************************
 ResetMatch() resets static variables involved with template matching.
 ****************************************************************************/
 
 void MATCHcls::ResetMatch(void)
-//void ResetMatch(void)
 {
 	TypeCount = 0 ;
 	for(int i = 0; i < MAXTYPES; ++i)
@@ -161,6 +138,8 @@ void MATCHcls::ResetMatch(void)
 
 	}
 	TypeCount = 0;
+    CombineInType = -1;
+    CombineDelType = -1;
 	//classify
 	DomType  = 0 ;
 	for(int i=0;i<MAXTYPES;i++)
@@ -212,7 +191,6 @@ void MATCHcls::ResetMatch(void)
 
 #define MATCH_START	(FIDMARK-(MATCH_LENGTH/2))
 #define MATCH_END	(FIDMARK+(MATCH_LENGTH/2))
-
 double CompareBeats(int *beat1, int *beat2, int *shiftAdj)
 	{
 	int i, max, min, magSum, shift ;
@@ -395,7 +373,6 @@ void UpdateBeat(int *aveBeat, int *newBeat, int shift)
 *******************************************************/
 
 int MATCHcls::GetTypesCount(void)
-//int GetTypesCount(void)
 	{
 	return(TypeCount) ;
 	}
@@ -406,7 +383,6 @@ int MATCHcls::GetTypesCount(void)
 ********************************************************/
 
 int MATCHcls::GetBeatTypeCount(int type)
-//int GetBeatTypeCount(int type)
 	{
 	return(BeatCounts[type]) ;
 	}
@@ -416,7 +392,6 @@ int MATCHcls::GetBeatTypeCount(int type)
 	a given type of beat.
 *******************************************************/
 int MATCHcls::GetBeatWidth(int type)
-//int GetBeatWidth(int type)
 	{
 	return(BeatWidths[type]) ;
 	}
@@ -427,7 +402,6 @@ int MATCHcls::GetBeatWidth(int type)
 ********************************************************/
 
 int MATCHcls::GetBeatCenter(int type)
-//int GetBeatCenter(int type)
     {
 	return(BeatCenters[type]) ;
 	}
@@ -438,7 +412,6 @@ int MATCHcls::GetBeatCenter(int type)
 ********************************************************/
 
 int MATCHcls::GetBeatClass(int type)
-//int GetBeatClass(int type)
 	{
 	if(type == MAXTYPES)
 		return(UNKNOWN) ;
@@ -451,7 +424,6 @@ int MATCHcls::GetBeatClass(int type)
 ******************************************************/
 
 void MATCHcls::SetBeatClass(int type, int beatClass)
-//void SetBeatClass(int type, int beatClass)
 	{
 	BeatClassifications[type] = beatClass ;
 	}
@@ -462,7 +434,6 @@ void MATCHcls::SetBeatClass(int type, int beatClass)
 ******************************************************************************/
 
 int MATCHcls::NewBeatType(int *newBeat )
-//int NewBeatType(int *newBeat )
 	{
 	int i, onset, offset, isoLevel, beatBegin, beatEnd ;
 	int mcType, amp ;
@@ -547,14 +518,12 @@ int MATCHcls::NewBeatType(int *newBeat )
 
 void MATCHcls::BestMorphMatch(int *newBeat,int *matchType,double *matchIndex, double *mi2,
 	int *shiftAdj)
-//void BestMorphMatch(int *newBeat,int *matchType,double *matchIndex, double *mi2,
-//                              int *shiftAdj)
 	{
 	int type, i, bestMatch, nextBest, minShift, shift, temp ;
 	int bestShift2, nextShift2 ;
 	double bestDiff2, nextDiff2;
 	double beatDiff, minDiff, nextDiff=10000 ;
-
+	CombineInType = -1; CombineDelType=-1;
 	if(TypeCount == 0)
 		{
 		*matchType = 0 ;
@@ -648,7 +617,8 @@ void MATCHcls::BestMorphMatch(int *newBeat,int *matchType,double *matchIndex, do
 				CombineDomData(nextBest,bestMatch) ;
 
 				// Shift other templates over.
-
+                CombineInType = bestMatch;
+                CombineDelType = nextBest;
 				for(type = nextBest; type < TypeCount-1; ++type)
 					BeatCopy(type+1,type) ;
 
@@ -674,10 +644,10 @@ void MATCHcls::BestMorphMatch(int *newBeat,int *matchType,double *matchIndex, do
 				CombineDomData(bestMatch,nextBest) ;
 
 				// Shift other templates over.
-
-				for(type = bestMatch; type < TypeCount-1; ++type)
+                CombineInType = nextBest;
+                CombineDelType = bestMatch;
+                for(type = bestMatch; type < TypeCount-1; ++type)
 					BeatCopy(type+1,type) ;
-
 
 				bestMatch = nextBest ;
 				}
@@ -698,8 +668,6 @@ void MATCHcls::BestMorphMatch(int *newBeat,int *matchType,double *matchIndex, do
 
 void MATCHcls::UpdateBeatType(int matchType,int *newBeat, double mi2,
 	 int shiftAdj)
-//void UpdateBeatType(int matchType,int *newBeat, double mi2,
-//                              int shiftAdj)
 	{
 	int i,onset,offset, isoLevel, beatBegin, beatEnd ;
 	int amp ;
@@ -754,7 +722,6 @@ void MATCHcls::UpdateBeatType(int matchType,int *newBeat, double mi2,
 ****************************************************************************/
 
 int MATCHcls::GetDominantType(void)
-//int GetDominantType(void)
 	{
 	int maxCount = 0, maxType = -1 ;
 	int type, totalCount ;
@@ -793,7 +760,6 @@ int MATCHcls::GetDominantType(void)
 ************************************************************************/
 
 void MATCHcls::ClearLastNewType(void)
-//void ClearLastNewType(void)
 	{
 	if(TypeCount != 0)
 		--TypeCount ;
@@ -805,7 +771,6 @@ void MATCHcls::ClearLastNewType(void)
 *****************************************************************/
 
 int MATCHcls::GetBeatBegin(int type)
-//int GetBeatBegin(int type)
 	{
 	return(BeatBegins[type]) ;
 	}
@@ -816,13 +781,11 @@ int MATCHcls::GetBeatBegin(int type)
 *****************************************************************/
 
 int MATCHcls::GetBeatEnd(int type)
-//int GetBeatEnd(int type)
 	{
 	return(BeatEnds[type]) ;
 	}
 
 int MATCHcls::GetBeatAmp(int type)
-//int GetBeatAmp(int type)
 	{
 	return(BeatAmps[type]) ;
 	}
@@ -835,14 +798,12 @@ int MATCHcls::GetBeatAmp(int type)
 ************************************************************************/
 
 double MATCHcls::DomCompare2(int *newBeat, int domType)
-//double DomCompare2(int *newBeat, int domType)
 	{
 	int shift ;
 	return(CompareBeats2(&BeatTemplates[domType][0],newBeat,&shift)) ;
 	}
 
 double MATCHcls::DomCompare(int newType, int domType)
-//double DomCompare(int newType, int domType)
 	{
 	int shift ;
 	return(CompareBeats2(&BeatTemplates[domType][0],&BeatTemplates[newType][0],
@@ -854,7 +815,6 @@ BeatCopy copies beat data from a source beat to a destination beat.
 *************************************************************************/
 
 void MATCHcls::BeatCopy(int srcBeat, int destBeat)
-//void BeatCopy(int srcBeat, int destBeat)
 	{
 	int i ;
 
@@ -891,7 +851,6 @@ void MATCHcls::BeatCopy(int srcBeat, int destBeat)
 *********************************************************************/
 
 int MATCHcls::MinimumBeatVariation(int type)
-//int MinimumBeatVariation(int type)
 	{
 	int i ;
 	for(i = 0; i < MAXTYPES; ++i)
@@ -910,7 +869,6 @@ int MATCHcls::MinimumBeatVariation(int type)
 #define WIDE_VAR_LIMIT	0.50
 
 int MATCHcls::WideBeatVariation(int type)
-//int WideBeatVariation(int type)
 	{
 	int i, n ;
 	double aveMI ;

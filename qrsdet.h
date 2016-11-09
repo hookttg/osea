@@ -125,6 +125,7 @@ public:
 
 public:
     QRSFILTcls qrsfilt1;
+    int QRSDetFront( int datum);
     void ResetQRSdet();
     int datafilt;
     int QRSFilter(int datum,int init);
@@ -184,6 +185,8 @@ public://match
     int BeatCenters[MAXTYPES] ;
     double MIs[MAXTYPES][MAXTYPES] ;
     int TypeCount;
+    int CombineInType;
+    int CombineDelType;
 public:
     void ResetMatch(void);
     int GetTypesCount(void);
@@ -265,12 +268,14 @@ public:
 
 private:
     int ECGBuffer[ECG_BUFFER_LENGTH], ECGBufferIndex;  // Circular data buffer.
+    int ECGBufferfilt[ECG_BUFFER_LENGTH];
     int BeatBuffer[BEATLGTH] ;                              //100
     int BeatQue[BEAT_QUE_LENGTH], BeatQueCount;  // Buffer of detection delays.
     int RRCount;
     int InitBeatFlag;
 
 public:
+    void NoiseCmp(int * noise);
     void ResetBDAC(void);
     int BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch);
 };
@@ -289,6 +294,7 @@ public:
 
 public:
     int TestRecord(const char *data_file_path);
+    int ReSearchQRS(const char *data_file_path, std::vector<int> locatebegin , std::vector<int> locateend, std::vector<std::vector<int>>*  FindrunS);
 
 private:
     void Initial();

@@ -17,7 +17,7 @@ set(SOURCE_FILES
         easytest.cpp
     #inputs.h
         match.cpp
-    match.h
+    #match.h
         noisechk.cpp
         postclas.cpp
     postclas.h

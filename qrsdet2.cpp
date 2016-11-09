@@ -378,6 +378,111 @@ int QRSdetcls::QRSDet( int datum, int init )
 	}
 
 /**************************************************************
+* QRSDetFront() takes a datum as input and returns a peak delay
+* when the signal returns to half its peak height
+**************************************************************/
+int QRSdetcls::QRSDetFront( int datum)
+{
+	int QrsDelay = 0;
+	int fdatum = 0;
+	int aPeak = 0;
+	fdatum = QRSFilter(datum,0) ;
+	aPeak = Peak(fdatum,0) ;
+	if(aPeak < MIN_PEAK_AMP) //Prevents detections of peaks smaller than 150 uV
+		aPeak = 0 ;
+	int newPeak = 0 ;
+	if(aPeak && !preBlankCnt)			// If there has been no peak for 200 ms
+	{										// save this one and start counting.
+		tempPeak = aPeak ;
+		preBlankCnt = PRE_BLANK ;			// MS200
+	}
+
+	else if(!aPeak && preBlankCnt)	// If we have held onto a peak for
+	{										// 200 ms pass it on for evaluation.
+		if(--preBlankCnt == 0)
+			newPeak = tempPeak ;
+	}
+
+	else if(aPeak)							// If we were holding a peak, but
+	{										// this ones bigger, save it and
+		if(aPeak > tempPeak)				// start counting to 200 ms again.
+		{
+			tempPeak = aPeak ;
+			preBlankCnt = PRE_BLANK ; // MS200
+		}
+		else if(--preBlankCnt == 0)
+			newPeak = tempPeak ;
+	}
+	/* Save derivative of raw signal for T-wave and baseline
+       shift discrimination. */
+
+	DDBuffer[DDPtr] = qrsfilt1.deriv1( datum, 0 ) ;                    //qrsfilt.c
+	if(++DDPtr == DER_DELAY)
+		DDPtr = 0 ;
+	++count;
+	if(newPeak > 0) {
+		if (!BLSCheck(DDBuffer, DDPtr, &maxder))                //local
+		{
+			if (newPeak > det_thresh) {
+				memmove(&qrsbuf[1], qrsbuf, MEMMOVELEN);        //string.h
+				qrsbuf[0] = newPeak;
+				qmean = mean(qrsbuf, ++qpkcnt);                         //local
+				det_thresh = thresh(qmean, nmean);               //local
+				memmove(&rrbuf[1], rrbuf, MEMMOVELEN);          //string.h
+				rrbuf[0] = count - WINDOW_WIDTH;
+				rrmean = mean(rrbuf, MAXBUFFERS);                         //local
+				sbcount = rrmean + (rrmean >> 1) + WINDOW_WIDTH;
+				count = WINDOW_WIDTH;
+
+				sbpeak = 0;
+				lastmax = maxder;
+				maxder = 0;
+				QrsDelay = WINDOW_WIDTH + FILTER_DELAY;
+				initBlank = initMax = rsetCount = 0;
+			}
+
+			else {
+				memmove(&noise[1], noise, MEMMOVELEN);
+				noise[0] = newPeak;
+				nmean = mean(noise, MAXBUFFERS);
+				det_thresh = thresh(qmean, nmean);
+
+				// Don't include early peaks (which might be T-waves)
+				// in the search back process.  A T-wave can mask
+				// a small following QRS.
+
+				if ((newPeak > sbpeak) && ((count - WINDOW_WIDTH) >= MS360)) {
+					sbpeak = newPeak;
+					sbloc = count - WINDOW_WIDTH;
+				}
+			}
+		}
+	}
+	/* Test for search back condition.  If a QRS is found in  */
+	/* search back update the QRS buffer and det_thresh.      */
+
+	if((count > sbcount) && (sbpeak > (det_thresh >> 1)))
+	{
+		memmove(&qrsbuf[1],qrsbuf,MEMMOVELEN) ;            //string.h
+		qrsbuf[0] = sbpeak ;
+		qmean = mean(qrsbuf,MAXBUFFERS) ;                           //local
+		det_thresh = thresh(qmean,nmean) ;                 //local
+		memmove(&rrbuf[1],rrbuf,MEMMOVELEN) ;              //string.h
+		rrbuf[0] = sbloc ;
+		rrmean = mean(rrbuf,MAXBUFFERS) ;                           //local
+		sbcount = rrmean + (rrmean >> 1) + WINDOW_WIDTH ;
+		QrsDelay = count = count - sbloc ;
+		QrsDelay += FILTER_DELAY ;
+		sbpeak = 0 ;
+		lastmax = maxder ;
+		maxder = 0 ;
+
+		initBlank = initMax = rsetCount = 0 ;
+	}
+	return QrsDelay;
+}
+
+/**************************************************************
 * peak() takes a datum as input and returns a peak height
 * when the signal returns to half its peak height, or 
 **************************************************************/

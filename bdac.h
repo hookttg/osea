@@ -27,6 +27,7 @@ You may contact the author by e-mail (pat@eplimited.edu) or postal mail
 MA 02143 USA).  For updates to this software, please visit our website
 (http://www.eplimited.com).
 ******************************************************************************/
+#include <math.h>
 #define SAMPLE_RATE	128	/* Sample rate in Hz. */
 //#define WRITE_PATH_0   "/home/healthwe2/mitdb/240/write";
 //#define READ_PATH_0  "/home/healthwe2/mitdb/240/read";

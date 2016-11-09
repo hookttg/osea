@@ -6,53 +6,34 @@
 #include <signal.h>
 #include <limits.h>
 #include <sys/inotify.h>
-//#define GOOGLE_STRIP_LOG 1
 #include <glog/logging.h>
 #include <fcntl.h>
 #include <iostream>
 #include <string>
 #include <map>
 
-//#include <mysql_connection.h>
-//#include <mysql_driver.h>
-//#include <cppconn/driver.h>
-//#include <cppconn/exception.h>
-//#include <cppconn/resultset.h>
-//#include <cppconn/statement.h>
-
-//#define EXAMPLE_HOST "localhost"
 #define EXAMPLE_USER "healthme"
 #define EXAMPLE_PASS "Obama505"
 #define EXAMPLE_DB "test"
 
-//#include "ecg.h"
+
 #include "filter.h"
-//#include "trans.h"
-//#include "fwt.h"
 #include "config.h"
 #include "boost/thread.hpp"
 #include <boost/lockfree/queue.hpp>
-//#include <ulib/os_thread.h>
-//#include <ulib/util_timer.h>
-//#include <ulib/hash_chain_r.h>
-//#include <ulib/math_rand_prot.h>
 #include <boost/filesystem/operations.hpp>
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include "watch.h"
-//#include "utilities.h"
 #include "kstwo.h"
-//#include "AF.h"
+
 // monitor the IN_CREATE and IN_CLOSE_WRITE, IN_ATTRIB event
 // when a new data file is created, the analyze thread is triggered by IN_CREATE event
 // when a re-analyze is asked, java program will modify the time of original data file, hence a IN_ATTRIB event is triggered.
 //there is an ending mark in each data file wich is 0x000 000 FEF EFE FE 000 000
-//#define SYS_CONF "/etc/healthme.conf"
-//#define DIST_CONF  "/etc/healthme/dist.txt"
-//#define WAVE_FILTER "/etc/filters/bspline1.flt"
-//#define WAVE_FILTER "/etc/filters/li1.flt"
+
 using std::map;
 using std::string;
 using std::cout;
@@ -66,10 +47,7 @@ static bool run = true;
 void sig_callback(int sig) {
     run = false;
 }
-/*struct st_worker_thread_param {
-	sql::Driver *driver;
-	sql::Connection *con;
-};*/
+
 enum ACTION {
     CREATE, WRITE, CLOSE
 };
@@ -115,12 +93,15 @@ void multithread_task(int index) {
                current_dir = watch.get(cmd.wd);
                 sprintf(path, "%s/%ld.dat", current_dir.c_str(), cmd.name_id);
                 TESTRECORD line;
+                //check the qrs between begin and end
+                /*vector<int> begin,end;
+                begin.push_back(12761472+76);
+                end.push_back(12762240+45);
+                vector<vector<int>> out;
+                line.ReSearchQRS(path,begin,end,&out);*/
+                //find the qrs and classify
                 line.TestRecord(path);
-              // FILE* file = fopen(path,"r") ; //p = new ecg(path, CIRCULAR_LEN);
-               // fclose(file);
-                //p->finish();
-//                delete p;
-                //watch.erase(cmd.wd);                
+
             } else if (cmd.oper == CLOSE) {
 
                 printf("cmd CLOSE!\n");

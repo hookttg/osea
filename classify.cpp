@@ -61,8 +61,6 @@ MA 02143 USA).  For updates to this software, please visit our website
 #include <stdlib.h>	// For abs()
 #include <stdio.h>
 #include "qrsdet.h"	// For base sample rate.
-//#include "bdac.h"
-#include "match.h"
 #include "rythmchk.h"
 #include "analbeat.h"
 #include "postclas.h"
@@ -115,18 +113,7 @@ MA 02143 USA).  For updates to this software, please visit our website
 // Local prototypes.
 
 int HFNoiseCheck(int *beat) ;
-//int TempClass(int rhythmClass, int morphType, int beatWidth, int domWidth,
-//	int domType, int hfNoise, int noiseLevel, int blShift, double domIndex) ;
-//int DomMonitor(int morphType, int rhythmClass, int beatWidth, int rr, int reset) ;
-//int GetDomRhythm(void) ;
-//int GetRunCount(void) ;
 
-// Local Global variables
-/*
-int DomType ;
-int RecentRRs[8], RecentTypes[8] ;
-RYTHMCHKcls rythmcnk;
-*/
 /***************************************************************************
 *  Classify() takes a beat buffer, the previous rr interval, and the present
 *  noise level estimate and returns a beat classification of NORMAL, PVC, or

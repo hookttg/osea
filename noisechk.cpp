@@ -35,11 +35,7 @@ This file contains functions for evaluating the noise content of a beat.
 #include <stdlib.h>
 #include "qrsdet.h"
 
-//#define NB_LENGTH	MS1500
 #define NS_LENGTH	MS50
-
-//int NoiseBuffer[NB_LENGTH], NBPtr = 0 ;//
-//int NoiseEstimate ;
 
 void NOISEcls::ResetNOISE()
 {
