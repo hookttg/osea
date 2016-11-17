@@ -91,43 +91,7 @@ void BDAC::ResetBDAC(void)
     BeatQueCount = 0 ;	// Flush the beat que.
 
 	}
-void BDAC::NoiseCmp(int * noise)
-{
-	int noisecmp=0;
-	int k=0,n=0;
-	double sumecg = 0,sumecgfilt = 0;
-	double ecgmean=0,ecgfiltmean =0;
-	int dif=0;
-	n=ECGBufferIndex-106;
-	if(n<0)
-		n += ECG_BUFFER_LENGTH;
 
-	for(k=0;k<60;k++){
-		if(n == ECG_BUFFER_LENGTH)
-			n = 0;
-		sumecg += ECGBuffer[n];
-		sumecgfilt += ECGBufferfilt[n];
-		n++;
-	}
-	ecgmean = sumecg/60;
-	ecgfiltmean = sumecgfilt/60;
-	sumecg =0,sumecgfilt =0;
-	for(k=0;k<60;k++){
-		if(n == ECG_BUFFER_LENGTH)
-			n = 0;
-		dif=ECGBuffer[n]-ecgmean;
-		sumecg +=dif*dif;
-		dif = ECGBufferfilt[n]-ecgfiltmean;
-		sumecgfilt +=dif*dif;
-		n++;
-	}
-	if(sumecg>sumecgfilt)
-		noisecmp = (int)(sqrt(sumecg-sumecgfilt));
-	//else
-		//noisecmp = (int)(sqrt(sumecgfilt-sumecg));
-
-	*noise = noisecmp;
-}
 /*****************************************************************************
 Syntax:
 	int BeatDetectAndClassify(int ecgSample, int *beatType, *beatMatch) ;
@@ -266,13 +230,6 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 		fidAdj = MS80 ;
 	else if(fidAdj < -MS80)
 		fidAdj = -MS80 ;
-
-	int noisecmp;
-		NoiseCmp(&noisecmp);
-    /*if(noisecmp>1000){
-			*beatType = 13 ;
-	}*/
-
 
 	return(detectDelay-fidAdj) ;
 	}
