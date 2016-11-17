@@ -238,10 +238,8 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         //save the real-data
         OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
         INlpc[lpcount++] = dataIN;
-       // printf("%d\n",SampleCount);
-        if(SampleCount==10170638){
-           int bugunnn = 99 ;
-       }
+        //printf("%d\n",SampleCount);
+
         // If a beat was detected, annotate the beat location and type.
         if(delay != 0)
         {
