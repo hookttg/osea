@@ -105,7 +105,7 @@ void QRSdetcls::ResetQRSdet()
     DDPtr = 0 ;
     Dly = 0 ;
     det_thresh = 0 ;
-    qpkcnt ;
+    qpkcnt = 0;
     for(int i=0;i<MAXBUFFERS;i++)
     {
         qrsbuf[i] = 0 ;
