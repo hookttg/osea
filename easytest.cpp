@@ -217,6 +217,8 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         //snprintf(txt_config_file_path,_MAX_PATH, "%s/%s/%s.txt", WRITE_PATH.c_str(), date_path, ecg_file_name);
         //FILE* datatxt = fopen(txt_config_file_path,"w");
     // Read data from MIT/BIH file until tre is none left.
+        FILE* filetxtout2=fopen("2422.txt","a+");
+        FILE* filetxtout=fopen("242.txt","a+");
     while( posd < lengthd)  //local
     {
         if(SampleCount%2==0) {
@@ -232,11 +234,12 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         else dataIN &= 0xfff;        //positive data, make all the hight bit 0
         //fprintf(datatxt,"%d\n",dataIN);
         ++SampleCount ;
-
+        fprintf(filetxtout,"%d\n",dataIN);
         // Pass sample to beat detection and classification.
         delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
         //save the real-data
         OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+        fprintf(filetxtout2,"%d\n",bdac.qrsdet1.datafilt);
         INlpc[lpcount++] = dataIN;
         //printf("%d\n",SampleCount);
 
@@ -361,6 +364,8 @@ int TESTRECORD::TestRecord(const char *data_file_path)
             }
         }
     }
+        fclose(filetxtout);
+        fclose(filetxtout2);
         //fclose(datatxt);
     //2 int change to 3 chars
     int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
@@ -570,6 +575,215 @@ int TESTRECORD::ReSearchQRS(const char *data_file_path, std::vector<int> locateb
     return 1;
 }
 
+int TESTRECORD::ReSearchSpecial(const char *data_file_path, int locatebegin, int locateend, int locatepoint , std::vector<int> *locatespecial)
+{
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+
+    //////////////////////////////////
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;
+    char* lpc = new char[flend];//(char *) malloc(flend);//
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+    int dataOUT;
+    int SampleCount = 0 ;
+    int locateID=0;
+    QRSdetcls qrsdet;
+    //比较特征
+    int specialbuf[SPECQRS_lGTH];
+    int specid = 0;
+    int qrsbuf[SPECQRS_lGTH];
+    int bufID = 0;
+    int start =locatepoint-SPECQRS_lGTH/2;
+    if(start<0){
+        start = 0;
+    }
+    int specpos = start;
+    double sumspec  = 0;
+    double mean = 0;
+    double specdis[SPECQRS_lGTH];
+    double s2 = 0;
+    double sumloc  = 0;
+    double meanloc = 0;
+    double s1 = 0;
+    double s = 0;
+    int locdn[SPECQRS_lGTH];
+    int locdis[SPECQRS_lGTH];
+    int k=0;
+    for (int i=0;i<SPECQRS_lGTH;i++)
+    {
+        specialbuf[i]=0;
+        qrsbuf[i]=0;
+        specdis[i]=0;
+        locdn[i]=0;
+        locdis[i]=0;
+    }
+    for(int i=0;i<SPECQRS_lGTH;i++)
+    {
+        dataIN = MAKEWORD(lpc[specpos * 3 + 2], (lpc[specpos * 3 + 1] & 0xf0) >> 4);
+        specpos++;
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        specialbuf[specid++] = dataIN;
+        sumspec += dataIN;
+    }
+    mean = sumspec/SPECQRS_lGTH;
+    for(int i=0;i<SPECQRS_lGTH;i++){
+        specdis[i] = specialbuf[i] - mean;
+        s2 += specdis[i]*specdis[i];
+    }
+    double rscore[3];
+    rscore[0] = rscore[1] =rscore[2]=0;
+
+    int n=strlen(data_file_path);
+    char ecg_annotation_file_path[100];
+    for(int i=n;i>=0;i--){
+        if(data_file_path[i]=='.'){
+            ecg_annotation_file_path[i] = data_file_path[i];
+            ecg_annotation_file_path[++i]='b';
+            ecg_annotation_file_path[++i]='s';
+            ecg_annotation_file_path[++i]='p';
+            i-=3;
+        }
+        else{
+            ecg_annotation_file_path[i] = data_file_path[i];
+        }
+    }
+    FILE *file_atr = fopen(ecg_annotation_file_path,"rb");
+    if (file_atr==NULL)
+    {
+//        LOG(ERROR) << "There is no " << ecg_annotation_file_path;
+        return 0;
+    }
+
+    int prePos=0;
+    WFDB_Annotation annot;
+    long last_time=0;
+    short last_offset=0;
+    int curPos;
+    int index=0;
+    vector<int> locset;
+    locset.push_back(locatebegin);
+    while (getann(file_atr, &annot, last_time, last_offset)==0) {
+        curPos = annot.time;
+        if(curPos>locatebegin && curPos<locateend)
+        {
+            if(curPos-15<=locatebegin){
+                locset.push_back(locatebegin+1);
+            }
+            else
+                locset.push_back(curPos-15);
+            if(curPos+15>=locateend){
+                locset.push_back(locateend-1);
+            }
+            else
+                locset.push_back(curPos+15);
+        }
+    }
+    locset.push_back(locateend);
+    int locsetid = 0;
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+
+       dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+       posd++;
+
+       if(SampleCount == locset[locsetid+1]){
+           if((locsetid+1)==locset.size()){
+               posd = lengthd;
+           }
+           else{
+               locsetid += 2;
+           }
+        }
+        else if(SampleCount >= locset[locsetid]&& SampleCount < locset[locsetid+1])
+        {
+            if (dataIN & 0x800)
+                dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+            else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+
+            //int delay = qrsdet.QRSDetFront(dataIN);
+            int tmp=qrsbuf[bufID];
+            qrsbuf[bufID++] = dataIN;
+            if(bufID == SPECQRS_lGTH)//
+                bufID = 0;
+            if(SampleCount >=(locatebegin+SPECQRS_lGTH)){
+                k=bufID;
+                for(int i=0;i<SPECQRS_lGTH;i++) {
+                    locdn[i]= qrsbuf[k++];
+                    if(k==SPECQRS_lGTH)
+                        k=0;
+                }
+                //compute the sum
+                sumloc = 0;
+                if(SampleCount ==locatebegin+SPECQRS_lGTH){
+                    for(int i=0;i<SPECQRS_lGTH;i++){
+                        sumloc += locdn[i];
+                    }
+                }
+                else{
+                    //sumloc = sumloc - tmp + dataIN;
+                    for(int i=0;i<SPECQRS_lGTH;i++){
+                        sumloc += locdn[i];
+                    }
+                }
+                //
+                meanloc = sumloc/SPECQRS_lGTH;
+                s1 = 0;
+                s = 0;
+                rscore[0] = rscore[1];
+                rscore[1]=rscore[2];
+                for(int i=0;i<SPECQRS_lGTH;i++){
+                    locdis[i] = locdn[i] - meanloc;
+                    s1 += locdis[i]*locdis[i];
+                    s += locdis[i]*specdis[i];
+                }
+                rscore[2] = s/sqrt(s1*s2);
+
+                if(rscore[1]>0.9 && rscore[1]>rscore[0]&&rscore[1]>rscore[2]){
+                    locatespecial->push_back(SampleCount);
+                   // printf("%d\t%d\t%f\t%f\n",locatespecial->size(),SampleCount-51,rscore[1],rscore[2]);
+                }
+            }
+
+        }
+
+        ++SampleCount;
+    }
+
+    delete[]lpc;
+    fclose(filed);
+
+    return 1;
+}
+
+bool TESTRECORD::compareQRS(char* qrsbuf,char* specbuf)
+{
+    int maxdn = 0, maxId = 0;
+    int mindn = 0, minId = 0;
+    int dis = 0;
+    int basicline = 0;
+    double sum = 0;
+    for(int i=0;i<31;i++){
+        sum += specbuf[i];
+    }
+    double mean = sum/31;
+    double summean = 0;
+    for(int i=0;i<31;i++){
+        summean += (specbuf[i] - mean)*(specbuf[i] - mean);
+    }
+
+    return false;
+}
 char *get_file_name(const char *path) {
     char *ssc;
     int l = 0;

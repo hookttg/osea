@@ -122,6 +122,12 @@ public:
 */
 void QRSFILTcls::ResetFilter()
 {
+    //meanfilt
+    for(int i=0;i<MEANBUFFER_LGTH;i++){
+        meanfilt_data[i] = 0;
+    }
+    meanfilt_id = 0;
+    meandata_count = 0;
 	//lpfilt
 	lpfilt_y1 = 0 ;
 	lpfilt_y2 = 0 ;
@@ -156,6 +162,32 @@ void QRSFILTcls::ResetFilter()
 		mvwint_data[i] = 0;
 	}
 	mvwint_ptr = 0;
+}
+/*************************************************************************
+*  medfilt() implements the mean value filter represented by the difference
+*  equation:(not median)
+*
+* 	y[n] = (x[n]+x[n-1]+x[n-2]+x[n-3]+x[n-4])/5;
+*
+*	Note that the filter delay is 2
+*
+**************************************************************************/
+int QRSFILTcls::meanfilt( int datum ,int init)
+{
+    int sum = 0;
+    if(init){
+        for(int i=0;i<MEANBUFFER_LGTH;i++){
+            meanfilt_data[i] = datum;
+        }
+    }
+    meanfilt_data[meanfilt_id] = datum;
+    for(int i=0;i<MEANBUFFER_LGTH;i++){
+        sum += meanfilt_data[i];
+    }
+    meanfilt_id++;
+    if(meanfilt_id==MEANBUFFER_LGTH)
+        meanfilt_id = 0;
+    return sum/5;
 }
 /*************************************************************************
 *  lpfilt() implements the digital filter represented by the difference

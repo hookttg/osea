@@ -140,6 +140,7 @@ int QRSdetcls::QRSFilter(int datum,int init)
 	int fdatum ;
 	if(init)
 	{
+        qrsfilt1.meanfilt( 0, 1 );
 		qrsfilt1.hpfilt( 0, 1 ) ;		// Initialize filters.
 		qrsfilt1.lpfilt( 0, 1 ) ;
 		qrsfilt1.mvwint( 0, 1 ) ;
@@ -147,7 +148,9 @@ int QRSdetcls::QRSFilter(int datum,int init)
 		qrsfilt1.deriv2( 0, 1 ) ;
         Dly = 0;
 	}
+
 	fdatum = qrsfilt1.lpfilt( datum, 0 ) ;		// Low pass filter data.
+    fdatum = qrsfilt1.meanfilt( datum, 0 ) ;
 	//datafilt = fdatum;
 	fdatum = qrsfilt1.hpfilt( fdatum, 0 ) ;	// High pass filter data.
 	datafilt = fdatum;

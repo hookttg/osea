@@ -90,8 +90,8 @@ void multithread_task(int index) {
             } else if (cmd.oper == WRITE) {
 
                 printf("cmd write!\n");
-               current_dir = watch.get(cmd.wd);
-                sprintf(path, "%s/%ld.dat", current_dir.c_str(), cmd.name_id);
+                current_dir = watch.get(cmd.wd);
+                //sprintf(path, "%s/%ld.dat", current_dir.c_str(), cmd.name_id);
                 TESTRECORD line;
                 //check the qrs between begin and end
                 /*vector<int> begin,end;
@@ -100,7 +100,14 @@ void multithread_task(int index) {
                 vector<vector<int>> out;
                 line.ReSearchQRS(path,begin,end,&out);*/
                 //find the qrs and classify
-                line.TestRecord(path);
+                vector<int> loc;
+                sprintf(path, "%s/%ld.dat", current_dir.c_str(), cmd.name_id);
+                line.ReSearchSpecial(path,0,10000,19935,&loc);
+                for(int i=0;i<loc.size();i++){
+                    printf("%d\t%d\n",i,loc[i]);
+                }
+
+                //line.TestRecord(path);
 
             } else if (cmd.oper == CLOSE) {
 

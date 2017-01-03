@@ -74,8 +74,14 @@ using namespace std;
 #define DER_DELAY	WINDOW_WIDTH + FILTER_DELAY + MS100
 #define _MAX_PATH 1024
 
+#define MEANBUFFER_LGTH 5
+#define SPECQRS_lGTH 51   //special qrs area from -25 to 25 based the point
 class QRSFILTcls{
 private:
+    //meanfilt
+    int meanfilt_data[MEANBUFFER_LGTH];
+    int meanfilt_id;
+    int meandata_count;
     //lpfilt
     long lpfilt_y1 ;
     long lpfilt_y2 ;
@@ -97,6 +103,7 @@ private:
     int mvwint_ptr ;
 
 public:
+    int meanfilt( int datum ,int init) ;
     int lpfilt( int datum ,int init) ;
     int hpfilt( int datum, int init ) ;
     int deriv1( int x0, int init ) ;
@@ -287,7 +294,7 @@ private:
     int modelnum;
     long lasttime;               //use in putann
     temp::Template tmp;          //use in modelwrite
-
+    bool compareQRS(char* qrsbuf,char* specbuf);
 
 public:
     int Recordnum;
@@ -295,6 +302,7 @@ public:
 public:
     int TestRecord(const char *data_file_path);
     int ReSearchQRS(const char *data_file_path, std::vector<int> locatebegin , std::vector<int> locateend, std::vector<std::vector<int>>*  FindrunS);
+    int ReSearchSpecial(const char *data_file_path, int locatebegin, int locateend, int locatepoint , std::vector<int> *locatespecial);
 
 private:
     void Initial();
