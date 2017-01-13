@@ -400,14 +400,21 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     bool Nfind1 = false, Vfind1 = false, Afind1 = false;
     int Nfind1ID = 0, Vfind1ID = 0, Afind1ID = 0;
     fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    Template1 *tmp1N = tmpN->add_template1s();
+        tmp1N->set_id(0);
+    Template1 *tmp1V = tmpV->add_template1s();
+        tmp1V->set_id(0);
+    Template1 *tmp1A = tmpA->add_template1s();
+        tmp1A->set_id(0);
     for (int j = 0; j < m_type.size(); ++j) {
         int type = m_type[j];
 
-        Template1 *tmp1;
+        Template2 *tmp1;
         int numID = 0;
         if (1 == type) {
             if (m_clusters[j].size() > MERRGENUM) {
-                tmp1 = tmpN->add_template1s();
+                tmp1 = tmp1N->add_template2s();
+                tmp1->set_id(0);
                 numID = Nnum++;
                 countN += m_clusters[j].size();
             }
@@ -425,7 +432,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         }
         else if (5 == type) {
             if (m_clusters[j].size() > MERRGENUM) {
-                tmp1 = tmpV->add_template1s();
+                tmp1 = tmp1V->add_template2s();
                 numID = Vnum++;
                 countV += m_clusters[j].size();
             }
@@ -443,7 +450,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         }
         else {
             if (m_clusters[j].size() > MERRGENUM) {
-                tmp1 = tmpA->add_template1s();
+                tmp1 = tmp1A->add_template2s();
                 numID = Anum++;
                 countA += m_clusters[j].size();
             }
@@ -460,43 +467,44 @@ int TESTRECORD::TestRecord(const char *data_file_path)
             }
         }
         if (m_clusters[j].size() > MERRGENUM) {
-            Template2 *tmp2 = tmp1->add_template2s();
-            tmp2->set_id(numID);
+//            Template2 *tmp2 = tmp1->add_template2s();
+//            tmp2->set_id(numID);
             for (int k = 0; k < m_clusters[j].size(); k++) {
-                tmp2->add_positions_of_beats(m_clusters[j][k]);
+                tmp1->add_positions_of_beats(m_clusters[j][k]);
             }
         }
     }
     if(Nfind1 == true) {
-        Template1 *tmp1;
-        tmp1 = tmpN->add_template1s();
+//        Template1 *tmp1;
+//        tmp1 = tmpN->add_template1s();
         int numID = Nnum++;
         countN += m_clusters[Nfind1ID].size();
-        Template2 *tmp2 = tmp1->add_template2s();
-        tmp2->set_id(numID);
+        Template2 *tmp2 = tmp1N->add_template2s();
+//        tmp2->set_id(numID);
+        tmp2->set_id(0);
         for(int k=0;k<m_clusters[Nfind1ID].size();k++) {
             tmp2->add_positions_of_beats(m_clusters[Nfind1ID][k]);
         }
     }
     if(Vfind1 == true) {
-        Template1 *tmp1;
-        tmp1 = tmpV->add_template1s();
+//        Template1 *tmp1;
+//        tmp1 = tmpV->add_template1s();
         int numID = Vnum++;
         countV += m_clusters[Vfind1ID].size();
-        Template2 *tmp2 = tmp1->add_template2s();
-        tmp2->set_id(numID);
+        Template2 *tmp2 = tmp1V->add_template2s();
+        tmp2->set_id(0);//numID);
         for(int k=0;k<m_clusters[Vfind1ID].size();k++) {
             tmp2->add_positions_of_beats(m_clusters[Vfind1ID][k]);
         }
     }
     if(Afind1 == true)
     {
-        Template1 *tmp1;
-        tmp1 = tmpA->add_template1s();
+//        Template1 *tmp1;
+//        tmp1 = tmpA->add_template1s();
         int numID = Anum++;
         countA += m_clusters[Afind1ID].size();
-        Template2 *tmp2 = tmp1->add_template2s();
-        tmp2->set_id(numID);
+        Template2 *tmp2 = tmp1A->add_template2s();
+        tmp2->set_id(0);//numID);
         for(int k=0;k<m_clusters[Afind1ID].size();k++) {
             tmp2->add_positions_of_beats(m_clusters[Afind1ID][k]);
         }

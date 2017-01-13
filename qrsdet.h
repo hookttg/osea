@@ -38,10 +38,10 @@ MA 02143 USA).  For updates to this software, please visit our website
 using namespace temp;
 using namespace std;
 
-#define SYS_CONF "/home/healthwe2/Desktop/osea/osea-firstserver/etc/healthme.conf"
-#define DIST_CONF  "/home/healthwe2/Desktop/osea/osea-firstserver/etc/healthme/dist.txt"
-//#define SYS_CONF "/etc/healthme.conf"
-//#define DIST_CONF  "/etc/healthme/dist.txt"
+//#define SYS_CONF "/home/healthwe2/Desktop/osea/osea-firstserver/etc/healthme.conf"
+//#define DIST_CONF  "/home/healthwe2/Desktop/osea/osea-firstserver/etc/healthme/dist.txt"
+#define SYS_CONF "/etc/healthme.conf"
+#define DIST_CONF  "/etc/healthme/dist.txt"
 #define MERRGENUM 1
 //#define MS_PER_SAMPLE	(  1000/  SAMPLE_RATE)
 #define MS10	( (10*SAMPLE_RATE+500)/ 1000 )
