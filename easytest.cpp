@@ -293,17 +293,19 @@ int TESTRECORD::TestRecord(const char *data_file_path)
                     std::sort(m_clusters[Intype].begin(),m_clusters[Intype].end());
                     m_clusters.erase(m_clusters.begin()+Deltype);
                     m_type.erase(m_type.begin()+Deltype);
-                    for(int idel=bdac.match1.CombineDelType;idel<MAXTYPES-1;idel++){
+                    for(int idel=bdac.match1.CombineDelType;idel<bdac.match1.TypeCount;idel++){
                         modeltypenum[idel]=modeltypenum[idel+1];
                     }
-                    for(int idel=0;idel<MAXTYPES;idel++){
+                    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+                    //think here has some wrong
+                    for(int idel=0;idel<bdac.match1.TypeCount;idel++){ //MAXTYPES
                         if(modeltypenum[idel]==Deltype)
                             modeltypenum[idel]=Intype;
                         if(modeltypenum[idel]>Deltype)
                             modeltypenum[idel]--;
                     }
 
-                    for(int k=0;k<MAXTYPES+1;k++){
+                    for(int k=0;k<bdac.match1.TypeCount+1;k++){  //MAXTYPES
                         if(modeltypen[k]==Deltype){
                             modeltypen[k] = Intype;
                         }
@@ -311,7 +313,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
                             modeltypen[k] = modeltypen[k]-1;
                         }
                     }
-                    for(int k=0;k<MAXTYPES+1;k++){
+                    for(int k=0;k<bdac.match1.TypeCount+1;k++){  //MAXTYPES
                         if(modeltypev[k]==Deltype){
                             modeltypev[k] =Intype;
                         }
