@@ -273,9 +273,10 @@ public:
     QRSdetcls qrsdet1;
     MATCHcls match1;
 
-private:
+public:
     int ECGBuffer[ECG_BUFFER_LENGTH], ECGBufferIndex;  // Circular data buffer.
     int ECGBufferfilt[ECG_BUFFER_LENGTH];
+private:
     int BeatBuffer[BEATLGTH] ;                              //100
     int BeatQue[BEAT_QUE_LENGTH], BeatQueCount;  // Buffer of detection delays.
     int RRCount;

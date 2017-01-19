@@ -213,12 +213,10 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     BDAC bdac;
     bdac.ResetBDAC() ;                                                   //bdac.c
     int lpcount = 0;
-        //char txt_config_file_path[_MAX_PATH];// the path with config
-        //snprintf(txt_config_file_path,_MAX_PATH, "%s/%s/%s.txt", WRITE_PATH.c_str(), date_path, ecg_file_name);
-        //FILE* datatxt = fopen(txt_config_file_path,"w");
+
     // Read data from MIT/BIH file until tre is none left.
-        FILE* filetxtout2=fopen("2422.txt","a+");
-        FILE* filetxtout=fopen("242.txt","a+");
+//        FILE* filetxtout2=fopen("2422.txt","a+");
+//        FILE* filetxtout=fopen("242.txt","a+");
     while( posd < lengthd)  //local
     {
         if(SampleCount%2==0) {
@@ -232,14 +230,13 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         if (dataIN & 0x800)
              dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
         else dataIN &= 0xfff;        //positive data, make all the hight bit 0
-        //fprintf(datatxt,"%d\n",dataIN);
         ++SampleCount ;
-        fprintf(filetxtout,"%d\n",dataIN);
+//        fprintf(filetxtout,"%d\n",dataIN);
         // Pass sample to beat detection and classification.
         delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
         //save the real-data
         OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
-        fprintf(filetxtout2,"%d\n",bdac.qrsdet1.datafilt);
+//        fprintf(filetxtout2,"%d\n",bdac.qrsdet1.datafilt);
         INlpc[lpcount++] = dataIN;
         //printf("%d\n",SampleCount);
 
@@ -248,6 +245,24 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         {
             DetectionTime = SampleCount - delay ;
 
+            int maxfiltdn = 0;
+            int maxid = 0;
+            int id = 0;
+            for(int i=0;i<36;i++)
+            {
+                id = bdac.ECGBufferIndex-delay+i-30+26;
+                if(id<0)
+                    id += ECG_BUFFER_LENGTH;
+                if(id>=ECG_BUFFER_LENGTH)
+                    id -= ECG_BUFFER_LENGTH;
+                if(bdac.ECGBufferfilt[id]>maxfiltdn)
+                {
+                    maxfiltdn = bdac.ECGBufferfilt[id];
+                    maxid = i;
+                }
+            }
+            if(maxid >10&& maxid<26)
+                DetectionTime +=maxid-17;
             // Convert sample count to input file sample rate.
             DetectionTime *= InputFileSampleFrequency ;
             DetectionTime /= SAMPLE_RATE ;
@@ -366,9 +381,8 @@ int TESTRECORD::TestRecord(const char *data_file_path)
             }
         }
     }
-        fclose(filetxtout);
-        fclose(filetxtout2);
-        //fclose(datatxt);
+//        fclose(filetxtout);
+//        fclose(filetxtout2);
     //2 int change to 3 chars
     int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
     for(int i=0;i<lengthd*2;i++)
