@@ -80,6 +80,9 @@ This file must be linked with object files produced from:
 #include "qrsdet.h"		// For sample rate.
 #include "config.h"
 
+//#include "boost/thread.hpp"
+#include <complex>
+using namespace std;
 // External function prototypes.
 int putann2(FILE *fp, WFDB_Annotation *annot, long &last_time,int shift_offset);
 void wfdb_p16(unsigned int x, FILE *fp);
@@ -93,6 +96,62 @@ void remove_extension(char* path);
 #else
 #define MAINTYPE void
 #endif
+const double PI = 3.141592;
+
+void DFT( complex<double> * theData,complex<double> * out, int S)//DFT---matlab
+{
+
+    for(unsigned i=0; (i < S); i++)
+    {
+        out[i].real(0.0);//
+        //out[i].imag(0.0);
+        //out[i] = complex<double>(0.0, 0.0);
+        for(unsigned j=0; (j < S); j++)
+        {
+            out[i] += theData[j] * polar<double>(1.0, - 2 * PI * i * j / S);
+        }
+
+    }
+
+    return;
+}
+void DFT2(double* theData,double * outr,double * outimag, int S)
+{
+    int k,n;
+    double out = 0;
+    for(k=0;k<S;k++)                                          //计算DFT变换后的实部
+    {
+        //outr[k] = 0.0;
+        out = 0.0;
+        for(n=0;n<S;n++)
+            out+=theData[n]*cos(2*PI*k*n/S);
+        outr[k] = out;
+        printf("%d\t%d\n",k,n);
+    }
+
+    for(k=0;k<S;k++)                                         //计算DFT变换后的虚部
+    {
+        outimag[k] = 0.0;
+        for(n=0;n<S;n++)
+            outimag[k]+=-theData[n]*sin(2*PI*k*n/S);
+    }
+}
+unsigned int nextPowerOf2(unsigned int n) //nextpow2----matlab
+{
+    unsigned count = 0;
+
+    // First n in the below condition is for the case where n is 0
+    if (n && !(n&(n-1)))
+        return n;
+
+    while( n != 0)
+    {
+        n  >>= 1;
+        count += 1;
+    }
+
+    return 1 << count;
+}
 
 void TESTRECORD::Initial()
 {
@@ -105,6 +164,181 @@ void TESTRECORD::Initial()
         modeltypenum[i] = 0;
     }
 }
+//version 1/*
+/*void TESTRECORD::WRITE_THE_TMP(int beatType,BDAC bdac,std::vector< std::vector<int> >& m_clusters,std::vector<int>& m_type,
+                               long DetectionTime,int* modeltypen,int* modeltypev,int* delnum)
+{
+//WRITE THE TMP
+    int morphTypenew = bdac.match1.morphType;
+    if(beatType == 13){//Q
+        if(m_clusters.size()<1){
+            m_type.push_back(beatType);
+            std::vector<int> newvec;
+            newvec.push_back(DetectionTime);
+            m_clusters.push_back(newvec);
+        }
+        else {
+            m_clusters[0].push_back(DetectionTime);
+        }
+    }
+    else if(bdac.match1.lastBeatWasNew == 1 ) {
+        if(m_type.size()<=MAXTYPES) {
+            modeltype[m_type.size()-1] = beatType;
+            modeltypenum[m_type.size()-1] = m_type.size();
+        }
+        else{
+            modeltype[morphTypenew] = beatType;
+            modeltypenum[morphTypenew] = m_type.size();
+        }
+        m_type.push_back(beatType);
+        std::vector<int> newvec;
+        newvec.push_back(DetectionTime);
+        m_clusters.push_back(newvec);
+    }
+    else
+    {
+        if (bdac.match1.CombineInType != -1)
+        {//refresh the m_cluster after combine 2 models
+            int Intype = modeltypenum[bdac.match1.CombineInType];
+            int Deltype = modeltypenum[bdac.match1.CombineDelType];
+            for (int k = 0; k < m_clusters[Deltype].size(); k++) {
+                m_clusters[Intype].push_back(m_clusters[Deltype].at(k));
+            }
+            std::sort(m_clusters[Intype].begin(), m_clusters[Intype].end());
+            m_clusters.erase(m_clusters.begin() + Deltype);
+            m_type.erase(m_type.begin() + Deltype);
+            for (int idel = bdac.match1.CombineDelType; idel < bdac.match1.TypeCount; idel++) {
+                modeltypenum[idel] = modeltypenum[idel + 1];
+            }
+            //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+            //think here has some wrong
+            for (int idel = 0; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
+                if (modeltypenum[idel] == Deltype)
+                    modeltypenum[idel] = Intype;
+                if (modeltypenum[idel] > Deltype)
+                    modeltypenum[idel]--;
+            }
+
+            for (int k = 0; k < bdac.match1.TypeCount + 1; k++) {  //MAXTYPES
+                if (modeltypen[k] == Deltype) {
+                    modeltypen[k] = Intype;
+                }
+                if (modeltypen[k] > Deltype) {
+                    modeltypen[k] = modeltypen[k] - 1;
+                }
+            }
+            for (int k = 0; k < bdac.match1.TypeCount + 1; k++) {  //MAXTYPES
+                if (modeltypev[k] == Deltype) {
+                    modeltypev[k] = Intype;
+                }
+                if (modeltypev[k] > Deltype) {
+                    modeltypev[k] = modeltypev[k] - 1;
+                }
+
+            }
+            *delnum++;
+            if (morphTypenew == bdac.match1.CombineDelType)
+                morphTypenew = bdac.match1.CombineInType;
+            if (morphTypenew > bdac.match1.CombineDelType)
+                morphTypenew--;
+        }
+
+        int numtypeout = modeltypenum[morphTypenew];
+        if (m_type[numtypeout] == beatType) {
+            m_clusters[numtypeout].push_back(DetectionTime);
+        }
+        else {
+            if (beatType == 1) {
+                if (modeltypen[morphTypenew] == 0) {
+                    m_type.push_back(beatType);
+                    modeltypen[morphTypenew] = m_type.size() - 1;
+                    std::vector<int> newvec;
+                    newvec.push_back(DetectionTime);
+                    m_clusters.push_back(newvec);
+                }
+                else {
+
+                    numtypeout = modeltypen[morphTypenew];
+                    m_clusters[numtypeout].push_back(DetectionTime);
+                }
+            }
+            else {
+                if (modeltypev[morphTypenew] == 0) {
+                    m_type.push_back(beatType);
+                    modeltypev[morphTypenew] = m_type.size() - 1;
+                    std::vector<int> newvec;
+                    newvec.push_back(DetectionTime);
+                    m_clusters.push_back(newvec);
+                }
+                else {
+                    numtypeout = modeltypev[morphTypenew];
+                    m_clusters[numtypeout].push_back(DetectionTime);
+                }
+            }
+
+        }
+    }
+}*/
+//
+void TESTRECORD::WRITE_THE_TMP(int beatType,BDAC bdac,std::vector< std::vector<int> >& m_clusters,std::vector<int>& m_type,std::vector<int>& Q_type,
+                               long DetectionTime,int* modeltypen,int* modeltypev,int* delnum)
+{
+//WRITE THE TMP
+    int DetectionT = (int)DetectionTime;
+    int morphTypenew = bdac.match1.morphType;
+    if(beatType == 13){//Q
+        Q_type.push_back(DetectionT);
+    }
+    else if(bdac.match1.lastBeatWasNew == 1 ) {
+        std::vector<int> newnormal;
+        std::vector<int> newv;
+        if(1==beatType)
+            newnormal.push_back(DetectionT);
+        else
+            newv.push_back(DetectionT);
+        m_clusters.push_back(newnormal);
+        m_clusters.push_back(newv);
+        m_type.push_back(1);
+        m_type.push_back(5);
+        modeltypenum[morphTypenew]=m_type.size()-2;
+
+    }
+    else
+    {
+        int numtypeout = modeltypenum[morphTypenew];
+        if(1==beatType)
+            m_clusters[numtypeout].push_back(DetectionT);
+        else if(5==beatType)
+            m_clusters[numtypeout+1].push_back(DetectionT);
+
+        if (bdac.match1.CombineInType != -1) {   //refresh the m_cluster after combine 2 models
+            int Intype = modeltypenum[bdac.match1.CombineInType];
+            int Deltype = modeltypenum[bdac.match1.CombineDelType];
+            for (int k = 0; k < m_clusters[Deltype].size(); k++) {
+                m_clusters[Intype].push_back(m_clusters[Deltype].at(k));
+            }
+            int vinid = Intype + 1;
+            int vdelid = Deltype + 1;
+            for (int k = 0; k < m_clusters[vdelid].size(); k++) {
+                m_clusters[vinid].push_back(m_clusters[vdelid].at(k));
+            }
+            std::sort(m_clusters[Intype].begin(), m_clusters[Intype].end());
+            std::sort(m_clusters[Intype + 1].begin(), m_clusters[Intype + 1].end());
+            m_clusters.erase(m_clusters.begin() + Deltype+1);
+            m_clusters.erase(m_clusters.begin() + Deltype);
+            m_type.erase(m_type.begin() + Deltype + 1);
+            m_type.erase(m_type.begin() + Deltype);
+            for (int idel = bdac.match1.CombineDelType; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
+                modeltypenum[idel] = modeltypenum[idel+1];
+            }
+            for (int idel = 0; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
+                if (modeltypenum[idel] > Deltype)
+                    modeltypenum[idel] -= 2;
+            }
+        }
+    }
+}
+
 
 int TESTRECORD::TestRecord(const char *data_file_path)
 	{
@@ -156,7 +390,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     }
     std::vector< std::vector<int> > m_clusters;
     std::vector<int> m_type;
-
+    std::vector<int> Q_type;
     //write to annot
     WFDB_Annotation annot ;
     FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
@@ -214,9 +448,22 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     bdac.ResetBDAC() ;                                                   //bdac.c
     int lpcount = 0;
 
+/*        double Fs = 128;//采样频率
+        double T = 1/Fs;//采样间隔
+        int L2=36;
+        int nfft = nextPowerOf2(L2);
+
+        double dataL[36];// = {-22,11,30,36,30,24,18,11,4,-1,-1,2,8,15,26,41,54,41,-5,-65,-100,-91,-52,-10,15,26,27,22,15,10,7,6,5,3,2,1};
+        double* dataind2 = new double[nfft];
+        double* datafftr2 = new double[nfft];
+        double* dataffti2 = new double[nfft];
+        for(int i=0;i<nfft;i++) {
+            dataind2[i] = 0.0;
+            datafftr2[i] = 0.0;
+            dataffti2[i] = 0.0;
+        }*/
+
     // Read data from MIT/BIH file until tre is none left.
-//        FILE* filetxtout2=fopen("2422.txt","a+");
-//        FILE* filetxtout=fopen("242.txt","a+");
     while( posd < lengthd)  //local
     {
         if(SampleCount%2==0) {
@@ -238,8 +485,9 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
 //        fprintf(filetxtout2,"%d\n",bdac.qrsdet1.datafilt);
         INlpc[lpcount++] = dataIN;
-        //printf("%d\n",SampleCount);
-
+       // printf("%d\n",SampleCount);
+//        if(SampleCount==11059216)//251815
+//            int mm=99;
         // If a beat was detected, annotate the beat location and type.
         if(delay != 0)
         {
@@ -248,21 +496,37 @@ int TESTRECORD::TestRecord(const char *data_file_path)
             int maxfiltdn = 0;
             int maxid = 0;
             int id = 0;
-            for(int i=0;i<36;i++)
+            for(int i=5;i<41;i++)
             {
-                id = bdac.ECGBufferIndex-delay+i-30+26;
+                id = bdac.ECGBufferIndex-delay+i-35+26;
                 if(id<0)
                     id += ECG_BUFFER_LENGTH;
                 if(id>=ECG_BUFFER_LENGTH)
                     id -= ECG_BUFFER_LENGTH;
+//                dataL[i-5] = bdac.ECGBufferfilt[id];
                 if(bdac.ECGBufferfilt[id]>maxfiltdn)
                 {
                     maxfiltdn = bdac.ECGBufferfilt[id];
                     maxid = i;
                 }
             }
-            if(maxid >10&& maxid<26)
-                DetectionTime +=maxid-17;
+            if(maxid >5&& maxid<31)
+                DetectionTime +=maxid-18;
+ /*           for(int i=0;i<L2;i++){
+                dataind2[i] = dataL[i];
+            }
+
+            //DFT(dataind,datafft,datafft,nfft);
+            DFT2(dataind2,datafftr2,dataffti2,nfft);
+            double datafftout= sqrt(pow(abs(datafftr2[5])/36,2) + pow(abs(dataffti2[5]/36),2));
+
+//            for(int i=0;i<L2;i++){
+//                datafftout[i] = sqrt(pow(abs(datafft[i].real())/36,2) + pow(abs(datafft[i].imag()/36),2));
+//            }
+            printf("%f\n",datafftout);
+            if((datafftout<10||datafftout>60) && bdac.match1.CombineInType==-1)
+                beatType = 13;
+*/
             // Convert sample count to input file sample rate.
             DetectionTime *= InputFileSampleFrequency ;
             DetectionTime /= SAMPLE_RATE ;
@@ -270,119 +534,15 @@ int TESTRECORD::TestRecord(const char *data_file_path)
             annot.anntyp = beatType ;
             annot.aux = NULL ;
             putann2(fileann,&annot,lasttime,0);
-
-            //WRITE THE TMP
-            int morphTypenew = bdac.match1.morphType;
-            if(beatType == 13){//Q
-                if(m_clusters.size()<1){
-                    m_type.push_back(beatType);
-                    std::vector<int> newvec;
-                    newvec.push_back(DetectionTime);
-                    m_clusters.push_back(newvec);
-                }
-                else {
-                    m_clusters[0].push_back(DetectionTime);
-                }
-            }
-            else if(bdac.match1.lastBeatWasNew == 1 ) {
-                if(m_type.size()<=MAXTYPES) {
-                    modeltype[m_type.size()-1] = beatType;
-                    modeltypenum[m_type.size()-1] = m_type.size();
-                }
-                else{
-                    modeltype[morphTypenew] = beatType;
-                    modeltypenum[morphTypenew] = m_type.size();
-                }
-                m_type.push_back(beatType);
-                std::vector<int> newvec;
-                newvec.push_back(DetectionTime);
-                m_clusters.push_back(newvec);
-            }
-            else {
-                if(bdac.match1.CombineInType!=-1) {//refresh the m_cluster after combine 2 models
-                    int Intype = modeltypenum[bdac.match1.CombineInType];
-                    int Deltype = modeltypenum[bdac.match1.CombineDelType];
-                    for(int k=0;k<m_clusters[Deltype].size();k++){
-                        m_clusters[Intype].push_back(m_clusters[Deltype].at(k));
-                    }
-                    std::sort(m_clusters[Intype].begin(),m_clusters[Intype].end());
-                    m_clusters.erase(m_clusters.begin()+Deltype);
-                    m_type.erase(m_type.begin()+Deltype);
-                    for(int idel=bdac.match1.CombineDelType;idel<bdac.match1.TypeCount;idel++){
-                        modeltypenum[idel]=modeltypenum[idel+1];
-                    }
-                    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
-                    //think here has some wrong
-                    for(int idel=0;idel<bdac.match1.TypeCount;idel++){ //MAXTYPES
-                        if(modeltypenum[idel]==Deltype)
-                            modeltypenum[idel]=Intype;
-                        if(modeltypenum[idel]>Deltype)
-                            modeltypenum[idel]--;
-                    }
-
-                    for(int k=0;k<bdac.match1.TypeCount+1;k++){  //MAXTYPES
-                        if(modeltypen[k]==Deltype){
-                            modeltypen[k] = Intype;
-                        }
-                        if(modeltypen[k]>Deltype){
-                            modeltypen[k] = modeltypen[k]-1;
-                        }
-                    }
-                    for(int k=0;k<bdac.match1.TypeCount+1;k++){  //MAXTYPES
-                        if(modeltypev[k]==Deltype){
-                            modeltypev[k] =Intype;
-                        }
-                        if(modeltypev[k]>Deltype){
-                            modeltypev[k] = modeltypev[k]-1;
-                        }
-
-                    }
-                    delnum++;
-                   if(morphTypenew==bdac.match1.CombineDelType)
-                        morphTypenew = bdac.match1.CombineInType;
-                    if(morphTypenew>bdac.match1.CombineDelType)
-                        morphTypenew--;
-                }
-
-                int numtypeout = modeltypenum[morphTypenew];
-                if (m_type[numtypeout] == beatType) {
-                    m_clusters[numtypeout].push_back(DetectionTime);
-                }
-                else {
-                    if(beatType == 1){
-                        if (modeltypen[morphTypenew] == 0 ) {
-                            m_type.push_back(beatType);
-                            modeltypen[morphTypenew] = m_type.size() - 1;
-                            std::vector<int> newvec;
-                            newvec.push_back(DetectionTime);
-                            m_clusters.push_back(newvec);
-                        }
-                        else {
-
-                            numtypeout = modeltypen[morphTypenew];
-                            m_clusters[numtypeout].push_back(DetectionTime);
-                        }
-                    }
-                    else{
-                        if (modeltypev[morphTypenew] == 0 ) {
-                            m_type.push_back(beatType);
-                            modeltypev[morphTypenew] = m_type.size() - 1;
-                            std::vector<int> newvec;
-                            newvec.push_back(DetectionTime);
-                            m_clusters.push_back(newvec);
-                        }
-                        else {
-                            numtypeout = modeltypev[morphTypenew];
-                            m_clusters[numtypeout].push_back(DetectionTime);
-                        }
-                    }
-
-                }
-            }
+            //WRITE TO THE TMP
+            WRITE_THE_TMP(beatType, bdac, m_clusters, m_type, Q_type, DetectionTime, modeltypen, modeltypev,&delnum);
         }
     }
-//        fclose(filetxtout);
-//        fclose(filetxtout2);
+
+/*    delete[]dataind2;
+//    delete[]datafftr2;
+//    delete[]dataffti2;*/
+
     //2 int change to 3 chars
     int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
     for(int i=0;i<lengthd*2;i++)
@@ -405,7 +565,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     delete[]INlpc;
     delete[]OUTlpc;
     //
-    printf("Record:%s,%d,%d\n",data_file_name,m_type.size(),delnum);
+    //printf("Record:%s,%d,%d\n",data_file_name,m_type.size(),delnum);
     wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
     fclose(fileann);//CLOSE WRITE THE annotion FILE
     fclose(filed); //CLOSE THE 1-channal-DAT FILE
@@ -422,8 +582,20 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         tmp1V->set_id(0);
     Template1 *tmp1A = tmpA->add_template1s();
         tmp1A->set_id(0);
+
+   if (Q_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1A->add_template2s();
+        tmp1->set_id(0);
+        countA += Q_type.size();
+        for (int k = 0; k < Q_type.size(); k++) {
+            tmp1->add_positions_of_beats(Q_type[k]);
+        }
+    }
     for (int j = 0; j < m_type.size(); ++j) {
         int type = m_type[j];
+        if(!m_clusters[j].size())
+            continue;
 
         Template2 *tmp1;
         int numID = 0;
@@ -433,35 +605,39 @@ int TESTRECORD::TestRecord(const char *data_file_path)
                 tmp1->set_id(0);
                 numID = Nnum++;
                 countN += m_clusters[j].size();
+                for (int k = 0; k < m_clusters[j].size(); k++) {
+                    tmp1->add_positions_of_beats(m_clusters[j][k]);
+                }
             }
             else {
                 if (!Nfind1) {
                     Nfind1 = true;
                     Nfind1ID = j;
                 }
-                else {
-                    for (int k = 0; k < MERRGENUM; ++k) {
-                        m_clusters[Nfind1ID].push_back(m_clusters[j][k]);
-                    }
+                for (int k = 0; k < MERRGENUM; ++k) {
+                    m_clusters[Nfind1ID].push_back(m_clusters[j][k]);
                 }
             }
         }
-        else if (5 == type) {
+        else if (5 == type)
+        {
             if (m_clusters[j].size() > MERRGENUM) {
                 tmp1 = tmp1V->add_template2s();
                 numID = Vnum++;
                 countV += m_clusters[j].size();
+                for (int k = 0; k < m_clusters[j].size(); k++) {
+                    tmp1->add_positions_of_beats(m_clusters[j][k]);
+                }
             }
             else {
                 if (!Vfind1) {
                     Vfind1 = true;
                     Vfind1ID = j;
                 }
-                else {
-                    for (int k = 0; k < MERRGENUM; ++k) {
-                        m_clusters[Vfind1ID].push_back(m_clusters[j][k]);
-                    }
+                for (int k = 0; k < MERRGENUM; ++k) {
+                    m_clusters[Vfind1ID].push_back(m_clusters[j][k]);
                 }
+
             }
         }
         else {
@@ -475,36 +651,23 @@ int TESTRECORD::TestRecord(const char *data_file_path)
                     Afind1 = true;
                     Afind1ID = j;
                 }
-                else {
-                    for (int k = 0; k < MERRGENUM; ++k) {
-                        m_clusters[Afind1ID].push_back(m_clusters[j][k]);
-                    }
+
+                for (int k = 0; k < MERRGENUM; ++k) {
+                    m_clusters[Afind1ID].push_back(m_clusters[j][k]);
                 }
-            }
-        }
-        if (m_clusters[j].size() > MERRGENUM) {
-//            Template2 *tmp2 = tmp1->add_template2s();
-//            tmp2->set_id(numID);
-            for (int k = 0; k < m_clusters[j].size(); k++) {
-                tmp1->add_positions_of_beats(m_clusters[j][k]);
             }
         }
     }
     if(Nfind1 == true) {
-//        Template1 *tmp1;
-//        tmp1 = tmpN->add_template1s();
         int numID = Nnum++;
         countN += m_clusters[Nfind1ID].size();
         Template2 *tmp2 = tmp1N->add_template2s();
-//        tmp2->set_id(numID);
         tmp2->set_id(0);
         for(int k=0;k<m_clusters[Nfind1ID].size();k++) {
             tmp2->add_positions_of_beats(m_clusters[Nfind1ID][k]);
         }
     }
     if(Vfind1 == true) {
-//        Template1 *tmp1;
-//        tmp1 = tmpV->add_template1s();
         int numID = Vnum++;
         countV += m_clusters[Vfind1ID].size();
         Template2 *tmp2 = tmp1V->add_template2s();
@@ -515,8 +678,6 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     }
     if(Afind1 == true)
     {
-//        Template1 *tmp1;
-//        tmp1 = tmpA->add_template1s();
         int numID = Anum++;
         countA += m_clusters[Afind1ID].size();
         Template2 *tmp2 = tmp1A->add_template2s();

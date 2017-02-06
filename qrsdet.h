@@ -301,6 +301,7 @@ public:
     int Recordnum;
 
 public:
+    void WRITE_THE_TMP(int beatType,BDAC bdac,std::vector< std::vector<int> >&m_clusters,std::vector<int> &m_type, std::vector<int>& Q_type, long DetectionTime,int* modeltypen,int* modeltypev,int* delnum);
     int TestRecord(const char *data_file_path);
     int ReSearchQRS(const char *data_file_path, std::vector<int> locatebegin , std::vector<int> locateend, std::vector<std::vector<int>>*  FindrunS);
     int ReSearchSpecial(const char *data_file_path, int locatebegin, int locateend, int locatepoint , std::vector<int> *locatespecial);
