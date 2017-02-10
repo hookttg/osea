@@ -115,25 +115,27 @@ void DFT( complex<double> * theData,complex<double> * out, int S)//DFT---matlab
 
     return;
 }
-void DFT2(double* theData,double * outr,double * outimag, int S)
+void DFT2(double* theData,double * outr,double * outimag, int S,double * coskn,double* sinkn)
 {
     int k,n;
     double out = 0;
+    int num = -S;
     for(k=0;k<S;k++)                                          //计算DFT变换后的实部
     {
         //outr[k] = 0.0;
         out = 0.0;
+        num += S;
         for(n=0;n<S;n++)
-            out+=theData[n]*cos(2*PI*k*n/S);
+            out+=theData[n]*coskn[num+n];//cos(2*PI*k*n/S);
         outr[k] = out;
-        printf("%d\t%d\n",k,n);
     }
-
+    num = -S;
     for(k=0;k<S;k++)                                         //计算DFT变换后的虚部
     {
         outimag[k] = 0.0;
+        num += S;
         for(n=0;n<S;n++)
-            outimag[k]+=-theData[n]*sin(2*PI*k*n/S);
+            outimag[k]+=-theData[n]*sinkn[num+n];//sin(2*PI*k*n/S);
     }
 }
 unsigned int nextPowerOf2(unsigned int n) //nextpow2----matlab
@@ -442,13 +444,13 @@ int TESTRECORD::TestRecord(const char *data_file_path)
     res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
     fclose(filehea);
 
-        int delnum=0;
+    int delnum=0;
     // Initialize beat detection and classification.
     BDAC bdac;
     bdac.ResetBDAC() ;                                                   //bdac.c
     int lpcount = 0;
 
-/*        double Fs = 128;//采样频率
+        double Fs = 128;//采样频率
         double T = 1/Fs;//采样间隔
         int L2=36;
         int nfft = nextPowerOf2(L2);
@@ -457,11 +459,20 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         double* dataind2 = new double[nfft];
         double* datafftr2 = new double[nfft];
         double* dataffti2 = new double[nfft];
+        double* coskn = new double[nfft*nfft];
+        double* sinkn = new double[nfft*nfft];
+        int num = -nfft;
         for(int i=0;i<nfft;i++) {
             dataind2[i] = 0.0;
             datafftr2[i] = 0.0;
             dataffti2[i] = 0.0;
-        }*/
+            num += nfft;
+            for(int k=0;k<nfft;k++)
+            {
+                coskn[num+k] = cos(2*PI*k*i/nfft);
+                sinkn[num+k] = sin(2*PI*k*i/nfft);
+            }
+        }
 
     // Read data from MIT/BIH file until tre is none left.
     while( posd < lengthd)  //local
@@ -478,16 +489,12 @@ int TESTRECORD::TestRecord(const char *data_file_path)
              dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
         else dataIN &= 0xfff;        //positive data, make all the hight bit 0
         ++SampleCount ;
-//        fprintf(filetxtout,"%d\n",dataIN);
         // Pass sample to beat detection and classification.
         delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
         //save the real-data
         OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
-//        fprintf(filetxtout2,"%d\n",bdac.qrsdet1.datafilt);
         INlpc[lpcount++] = dataIN;
        // printf("%d\n",SampleCount);
-//        if(SampleCount==11059216)//251815
-//            int mm=99;
         // If a beat was detected, annotate the beat location and type.
         if(delay != 0)
         {
@@ -503,7 +510,7 @@ int TESTRECORD::TestRecord(const char *data_file_path)
                     id += ECG_BUFFER_LENGTH;
                 if(id>=ECG_BUFFER_LENGTH)
                     id -= ECG_BUFFER_LENGTH;
-//                dataL[i-5] = bdac.ECGBufferfilt[id];
+                dataL[i-5] = bdac.ECGBufferfilt[id];
                 if(bdac.ECGBufferfilt[id]>maxfiltdn)
                 {
                     maxfiltdn = bdac.ECGBufferfilt[id];
@@ -512,24 +519,30 @@ int TESTRECORD::TestRecord(const char *data_file_path)
             }
             if(maxid >5&& maxid<31)
                 DetectionTime +=maxid-18;
- /*           for(int i=0;i<L2;i++){
+            for(int i=0;i<L2;i++){
                 dataind2[i] = dataL[i];
             }
 
             //DFT(dataind,datafft,datafft,nfft);
-            DFT2(dataind2,datafftr2,dataffti2,nfft);
-            double datafftout= sqrt(pow(abs(datafftr2[5])/36,2) + pow(abs(dataffti2[5]/36),2));
+            DFT2(dataind2,datafftr2,dataffti2,nfft,coskn,sinkn);
+            double datafftout= sqrt(pow(datafftr2[5]/36,2) + pow(dataffti2[5]/36,2));
 
 //            for(int i=0;i<L2;i++){
 //                datafftout[i] = sqrt(pow(abs(datafft[i].real())/36,2) + pow(abs(datafft[i].imag()/36),2));
 //            }
-            printf("%f\n",datafftout);
-            if((datafftout<10||datafftout>60) && bdac.match1.CombineInType==-1)
+            //printf("%f\n",datafftout);
+            //threshold of pinyu and not comerge the tmp and not create the tmp
+            //want to add a threshold ,for example the counts of cross zero
+            if((datafftout<8||datafftout>100) && bdac.match1.CombineInType==-1&&bdac.match1.lastBeatWasNew != 1 ) {
                 beatType = 13;
-*/
+            }
+
             // Convert sample count to input file sample rate.
             DetectionTime *= InputFileSampleFrequency ;
             DetectionTime /= SAMPLE_RATE ;
+            if(annot.time>=DetectionTime){
+                continue;
+            }
             annot.time = DetectionTime ;
             annot.anntyp = beatType ;
             annot.aux = NULL ;
@@ -539,9 +552,11 @@ int TESTRECORD::TestRecord(const char *data_file_path)
         }
     }
 
-/*    delete[]dataind2;
-//    delete[]datafftr2;
-//    delete[]dataffti2;*/
+    delete[]dataind2;
+    delete[]datafftr2;
+    delete[]dataffti2;
+    delete[]sinkn;
+    delete[]coskn;
 
     //2 int change to 3 chars
     int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
@@ -969,6 +984,7 @@ bool TESTRECORD::compareQRS(char* qrsbuf,char* specbuf)
 
     return false;
 }
+
 char *get_file_name(const char *path) {
     char *ssc;
     int l = 0;
