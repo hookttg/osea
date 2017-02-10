@@ -179,64 +179,6 @@ bool dir_exists(const char* pzPath) {
     return bExists;
 }
 
-/* const double PI = 3.141592;
-
-vector< complex<double> > DFT(vector< complex<double> >& theData)//DFT---matlab
-{
-// Define the Size of the read in vector
-    const int S = theData.size();
-
-// Initalise new vector with size of S
-    vector< complex<double> > out(S, 0);
-    for(unsigned i=0; (i < S); i++)
-    {
-        out[i] = complex<double>(0.0, 0.0);
-        for(unsigned j=0; (j < S); j++)
-        {
-            out[i] += theData[j] * polar<double>(1.0, - 2 * PI * i * j / S);
-        }
-    }
-
-    return out;
-}
-unsigned int nextPowerOf2(unsigned int n) //nextpow2----matlab
-{
-    unsigned count = 0;
-
-    // First n in the below condition is for the case where n is 0
-    if (n && !(n&(n-1)))
-        return n;
-
-    while( n != 0)
-    {
-        n  >>= 1;
-        count += 1;
-    }
-
-    return 1 << count;
-}
-    double Fs = 128;//采样频率
-    double T = 1/Fs;//采样间隔
-    int L2=36;
-    int n = nextPowerOf2(L2);
-
-    double datain[36] = {-22,11,30,36,30,24,18,11,4,-1,-1,2,8,15,26,41,54,41,-5,-65,-100,-91,-52,-10,15,26,27,22,15,10,7,6,5,3,2,1};
-    double datafftout[36] ;
-    vector<complex<double>> dataind;
-    vector<complex<double>> datafft;
-    for(int i=0;i<n;i++){
-        if(i<L2){
-            //complex<double> td(datain2[i],0);
-            dataind.push_back(datain[i]);
-        }
-        else
-            dataind.push_back(0);
-    }
-    datafft = DFT(dataind);
-    for(int i=0;i<L2;i++){
-        datafftout[i] = sqrt(pow(abs(datafft[i].real())/36,2) + pow(abs(datafft[i].imag()/36),2));
-    }*/
-
 int main(int argc,char*argv[]) {
 
     google::InitGoogleLogging("HEALTHME");
