@@ -305,6 +305,8 @@ public:
     int TestRecord(const char *data_file_path);
     int ReSearchQRS(const char *data_file_path, std::vector<int> locatebegin , std::vector<int> locateend, std::vector<std::vector<int>>*  FindrunS);
     int ReSearchSpecial(const char *data_file_path, int locatebegin, int locateend, int locatepoint , std::vector<int> *locatespecial);
+    int TestRecord__edf(const char *data_file_path);
+    int TestRecord__edf_short(const char *data_file_path);
 
 private:
     void Initial();
