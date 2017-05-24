@@ -231,7 +231,26 @@ int BDAC::BeatDetectAndClassify(int ecgSample, int *beatType, int *beatMatch)
 	else if(fidAdj < -MS80)
 		fidAdj = -MS80 ;
 
-	return(detectDelay-fidAdj) ;
+    //查找周围值最大的点
+	int n=ECGBufferIndex-detectDelay-fidAdj-20;
+    if(n<0)
+		n=ECG_BUFFER_LENGTH+n;
+    int roundmax = ECGBufferfilt[n];
+        int dn = 0;
+    for(int as = 0;as<40;as++)
+    {
+        if(ECGBufferfilt[n]>roundmax)
+        {
+            roundmax = ECGBufferfilt[n];
+            dn = as;
+        }
+        n++;
+        if(n==ECG_BUFFER_LENGTH)
+            n=0;
+    }
+	//return(detectDelay-fidAdj);
+	return(detectDelay-fidAdj+20-dn) ;
+
 	}
 
 void DownSampleBeat(int *beatOut, int *beatIn)
