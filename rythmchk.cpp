@@ -298,7 +298,7 @@ int RYTHMCHKcls::RhythmChk(int rr)
 				}
 
 
-			}
+		    	}
 
 		// If this interval matches the previous premature
 		// interval assume a ventricular couplet.

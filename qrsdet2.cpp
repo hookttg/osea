@@ -150,16 +150,39 @@ int QRSdetcls::QRSFilter(int datum,int init)
 	}
 
 	fdatum = qrsfilt1.lpfilt( datum, 0 ) ;		// Low pass filter data.
-    fdatum = qrsfilt1.meanfilt( datum, 0 ) ;
+//	FILE* lp = fopen("lp.txt","a+");
+//	fprintf(lp,"%d\n",fdatum);
+//	fclose(lp);
+    dataqrs[0]=fdatum;//useinqrs
+    //fdatum = qrsfilt1.meanfilt( datum, 0 ) ;
+    dataqrs[1]=fdatum;//useinqrs
 	//datafilt = fdatum;
 	fdatum = qrsfilt1.hpfilt( fdatum, 0 ) ;	// High pass filter data.
+    dataqrs[2]=fdatum;//useinqrs
+//	FILE* hp = fopen("hp.txt","a+");
+//	fprintf(hp,"%d\n",fdatum);
+//	fclose(hp);
+
 	datafilt = fdatum;
 	fdatum = qrsfilt1.deriv2( fdatum, 0 ) ;	// Take the derivative.
+    dataqrs[3]=fdatum;//useinqrs
+//	FILE* der = fopen("der.txt","a+");
+//	fprintf(der,"%d\n",fdatum);
+//	fclose(der);
 	//datafilt = fdatum;
 	fdatum = fabs(fdatum) ;				// Take the absolute value.
+    dataqrs[4]=fdatum;//useinqrs
+//	FILE* derabs = fopen("derabs.txt","a+");
+//	fprintf(derabs,"%d\n",fdatum);
+//	fclose(derabs);
 	//datafilt = fdatum;
 	fdatum = qrsfilt1.mvwint( fdatum, 0 ) ;	// Average over an 80 ms window .
+    dataqrs[5]=fdatum;//useinqrs
+//	FILE* mvw = fopen("mvw.txt","a+");
+//	fprintf(mvw,"%d\n",fdatum);
+//	fclose(mvw);
 	//datafilt = fdatum;
+
 	return(fdatum) ;
 }
 
@@ -222,11 +245,16 @@ int QRSdetcls::QRSDet( int datum, int init )
 		else if(--preBlankCnt == 0)
 			newPeak = tempPeak ;
 		}
-
+    dataqrs[6]=newPeak;//useinqrs
+//	FILE* pe = fopen("peak.txt","a+");
+//	fprintf(pe,"%d\n",newPeak);
+//	fclose(pe);
 	/* Save derivative of raw signal for T-wave and baseline
 	   shift discrimination. */
 	
-	DDBuffer[DDPtr] = qrsfilt1.deriv1( datum, 0 ) ;                    //qrsfilt.c
+	//DDBuffer[DDPtr] = qrsfilt1.deriv1( datum, 0 ) ;                    //qrsfilt.c
+    DDBuffer[DDPtr] = qrsfilt1.deriv1( dataqrs[2], 0 ) ;  //useinqrs
+    dataqrs[7]=DDBuffer[DDPtr];//useinqrs
 	if(++DDPtr == DER_DELAY)
 		DDPtr = 0 ;
 

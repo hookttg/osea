@@ -129,6 +129,7 @@ public:
     int initBlank, initMax ;
     int preBlankCnt, tempPeak ;
     int max , timeSinceMax , lastDatum ;
+    int dataqrs[10];////useinqrs
 
 public:
     QRSFILTcls qrsfilt1;
@@ -307,6 +308,11 @@ public:
     int ReSearchSpecial(const char *data_file_path, int locatebegin, int locateend, int locatepoint , std::vector<int> *locatespecial);
     int TestRecord__edf(const char *data_file_path);
     int TestRecord__edf_short(const char *data_file_path);
+    int TestRecord_read_save(const char *data_file_path);
+    int TestRecord_qrs(const char *data_file_path); ////useinqrs
+    void WRITE_THE_TMP2(int beatType,BDAC bdac,std::vector< std::vector<int> >& m_clusters,std::vector<int>& m_type,std::vector<int>& Q_type,std::vector<int>& S_type,
+                                    long DetectionTime,int* modeltypen,int* modeltypev,int* delnum);
+    void WRITE_THE_TMP3(int beatType,std::vector<int>& m_type,std::vector<int>& Q_type,std::vector<int>& S_type,std::vector<int>& V_type, long DetectionTime);
 
 private:
     void Initial();

@@ -316,30 +316,88 @@ void TESTRECORD::WRITE_THE_TMP(int beatType,BDAC bdac,std::vector< std::vector<i
         if (bdac.match1.CombineInType != -1) {   //refresh the m_cluster after combine 2 models
             int Intype = modeltypenum[bdac.match1.CombineInType];
             int Deltype = modeltypenum[bdac.match1.CombineDelType];
-            for (int k = 0; k < m_clusters[Deltype].size(); k++) {
-                m_clusters[Intype].push_back(m_clusters[Deltype].at(k));
-            }
-            int vinid = Intype + 1;
-            int vdelid = Deltype + 1;
-            for (int k = 0; k < m_clusters[vdelid].size(); k++) {
-                m_clusters[vinid].push_back(m_clusters[vdelid].at(k));
-            }
-            std::sort(m_clusters[Intype].begin(), m_clusters[Intype].end());
-            std::sort(m_clusters[Intype + 1].begin(), m_clusters[Intype + 1].end());
-            m_clusters.erase(m_clusters.begin() + Deltype+1);
-            m_clusters.erase(m_clusters.begin() + Deltype);
-            m_type.erase(m_type.begin() + Deltype + 1);
-            m_type.erase(m_type.begin() + Deltype);
-            for (int idel = bdac.match1.CombineDelType; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
-                modeltypenum[idel] = modeltypenum[idel+1];
-            }
-            for (int idel = 0; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
-                if (modeltypenum[idel] > Deltype)
-                    modeltypenum[idel] -= 2;
+            if(Intype!=Deltype) {
+                for (int k = 0; k < m_clusters[Deltype].size(); k++) {
+                    m_clusters[Intype].push_back(m_clusters[Deltype].at(k));
+                }
+                int vinid = Intype + 1;
+                int vdelid = Deltype + 1;
+                for (int k = 0; k < m_clusters[vdelid].size(); k++) {
+                    m_clusters[vinid].push_back(m_clusters[vdelid].at(k));
+                }
+                std::sort(m_clusters[Intype].begin(), m_clusters[Intype].end());
+                std::sort(m_clusters[Intype + 1].begin(), m_clusters[Intype + 1].end());
+                m_clusters.erase(m_clusters.begin() + Deltype + 1);
+                m_clusters.erase(m_clusters.begin() + Deltype);
+                m_type.erase(m_type.begin() + Deltype + 1);
+                m_type.erase(m_type.begin() + Deltype);
+                for (int idel = bdac.match1.CombineDelType; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
+                    modeltypenum[idel] = modeltypenum[idel + 1];
+                }
+                for (int idel = 0; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
+                    if (modeltypenum[idel] > Deltype)
+                        modeltypenum[idel] -= 2;
+                }
             }
         }
     }
 }
+//{
+////WRITE THE TMP
+//    int DetectionT = (int)DetectionTime;
+//    int morphTypenew = bdac.match1.morphType;
+//    if(beatType == 13){//Q
+//        Q_type.push_back(DetectionT);
+//    }
+//    else if(bdac.match1.lastBeatWasNew == 1 ) {
+//        std::vector<int> newnormal;
+//        std::vector<int> newv;
+//        if(1==beatType)
+//            newnormal.push_back(DetectionT);
+//        else
+//            newv.push_back(DetectionT);
+//        m_clusters.push_back(newnormal);
+//        m_clusters.push_back(newv);
+//        m_type.push_back(1);
+//        m_type.push_back(5);
+//        modeltypenum[morphTypenew]=m_type.size()-2;
+//
+//    }
+//    else
+//    {
+//        int numtypeout = modeltypenum[morphTypenew];
+//        if(1==beatType)
+//            m_clusters[numtypeout].push_back(DetectionT);
+//        else if(5==beatType)
+//            m_clusters[numtypeout+1].push_back(DetectionT);
+//
+//        if (bdac.match1.CombineInType != -1) {   //refresh the m_cluster after combine 2 models
+//            int Intype = modeltypenum[bdac.match1.CombineInType];
+//            int Deltype = modeltypenum[bdac.match1.CombineDelType];
+//            for (int k = 0; k < m_clusters[Deltype].size(); k++) {
+//                m_clusters[Intype].push_back(m_clusters[Deltype].at(k));
+//            }
+//            int vinid = Intype + 1;
+//            int vdelid = Deltype + 1;
+//            for (int k = 0; k < m_clusters[vdelid].size(); k++) {
+//                m_clusters[vinid].push_back(m_clusters[vdelid].at(k));
+//            }
+//            std::sort(m_clusters[Intype].begin(), m_clusters[Intype].end());
+//            std::sort(m_clusters[Intype + 1].begin(), m_clusters[Intype + 1].end());
+//            m_clusters.erase(m_clusters.begin() + Deltype+1);
+//            m_clusters.erase(m_clusters.begin() + Deltype);
+//            m_type.erase(m_type.begin() + Deltype + 1);
+//            m_type.erase(m_type.begin() + Deltype);
+//            for (int idel = bdac.match1.CombineDelType; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
+//                modeltypenum[idel] = modeltypenum[idel+1];
+//            }
+//            for (int idel = 0; idel < bdac.match1.TypeCount; idel++) { //MAXTYPES
+//                if (modeltypenum[idel] > Deltype)
+//                    modeltypenum[idel] -= 2;
+//            }
+//        }
+//    }
+//}
 
 
 int TESTRECORD::TestRecord(const char *data_file_path)
@@ -1576,12 +1634,12 @@ int TESTRECORD::TestRecord__edf_short(const char *data_file_path)
         }
     }
 
-   /* delete[]dataind2;
-    delete[]datafftr2;
-    delete[]dataffti2;
-    delete[]sinkn;
-    delete[]coskn;
-*/
+   // delete[]dataind2;
+ //   delete[]datafftr2;
+ //   delete[]dataffti2;
+//    delete[]sinkn;
+//    delete[]coskn;
+//
     //2 int change to 3 chars
     int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
     for(int i=0;i<lengthd;i++)
@@ -1735,8 +1793,2638 @@ int TESTRECORD::TestRecord__edf_short(const char *data_file_path)
     return 0;
 }
 
-/*int TESTRECORD::TestRecord_rtdata()
+int TESTRECORD::TestRecord_read_save(const char *data_file_path)
 {
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
 
+    //get the read 1-channal-dat and write 2-channal-dat path
+    string WRITE_PATH,READ_PATH;
+    conf::Instance()->Load(SYS_CONF);
+    conf::Instance()->Get("write_path", WRITE_PATH);
+    conf::Instance()->Get("read_path", READ_PATH);
+    //get the filename and the last foldername
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
+    //get the full file path
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    //variable initial
+    Initial();
+
+    //find QRS
+    int delay;
+    int InputFileSampleFrequency = 128;
+    long SampleCount = 0;
+    long DetectionTime = 0;
+    int beatType, beatMatch ;
+    lasttime =0;
+
+
+    // Open a 1 channel record
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;              // read the 1-channal-locate, once by 3 chars
+    char* lpc = new char[flend]; //read
+    int* INlpc = new int[lengthd*2];//the real data in 1-channal-file
+    int* OUTlpc = new int[lengthd*2];//the real data in 2-channal-file
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+
+    int delnum=0;
+    // Initialize beat detection and classification.
+    BDAC bdac;
+    bdac.ResetBDAC() ;                                                   //bdac.c
+    int lpcount = 0;
+    FILE* file_data=fopen("fdata.txt","a");
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+        if(SampleCount%2==0) {
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else {
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
+        }
+
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        fprintf(file_data,"%d\n",dataIN);
+        ++SampleCount ;
+        // Pass sample to beat detection and classification.
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+    }
+    fclose(file_data);
+    fclose(filed);
+
+    return 0;
+}
+
+struct data_qrs{
+    int wid;  // 宽度，从最大值到两边最小值的范围
+    int maxd; // 最大值
+    int maxid;//最大值位置
+    int mind; //最小值
+    int minid; //最小值位置
+    int Hall;  //高度范围
+    int count0;//过0点个数
+    int demax;//一阶最大值
+
+};
+
+void checkqrs(int* data,int* de,int* deabs,data_qrs* qrs);
+
+int TESTRECORD::TestRecord_qrs(const char *data_file_path)
+{
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
+    char ecg_annotation_file_path[_MAX_PATH]; //saved file name
+    char ecg_head_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_tmp_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_config_file_path[_MAX_PATH];// the path with config
+    //get the read 1-channal-dat and write 2-channal-dat path
+    string WRITE_PATH,READ_PATH;
+    conf::Instance()->Load(SYS_CONF);
+    conf::Instance()->Get("write_path", WRITE_PATH);
+    conf::Instance()->Get("read_path", READ_PATH);
+    //get the filename and the last foldername
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
+    //get the full file path
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_head_file_path,_MAX_PATH, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_tmp_file_path,_MAX_PATH, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_config_file_path,_MAX_PATH, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    //variable initial
+    Initial();
+    //use the google_protobuf
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    //Template tmp;
+    temp::BeatTemplate *tmpN=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpA=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpV=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpS=tmp.add_beat_templates();
+    tmpA->set_type(BeatTemplate::A);
+    tmpN->set_type(BeatTemplate::N);
+    tmpV->set_type(BeatTemplate::V);
+    tmpS->set_type(BeatTemplate::S);
+    //using in tmp
+    int modeltypev[MAXTYPES+1];
+    int modeltypen[MAXTYPES+1];
+    for(int i=0;i<MAXTYPES+1;i++)
+    {
+        modeltypev[i] = 0;
+        modeltypen[i] = 0;
+    }
+    std::vector< std::vector<int> > m_clusters;
+    std::vector<int> m_type;
+    std::vector<int> Q_type;
+    std::vector<int> S_type;
+    std::vector<int> V_type;
+    //write to annot
+    WFDB_Annotation annotppre ;
+    WFDB_Annotation annotpre ;
+    WFDB_Annotation annot ;
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+
+    //find QRS
+    int delay = 45;
+    int InputFileSampleFrequency = 128;
+    long SampleCount = 0;
+    long DetectionTime = 0;
+    int beatType=13, beatMatch=0 ;
+    lasttime =0;
+
+
+    // Open a 1 channel record
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;              // read the 1-channal-locate, once by 3 chars
+    char* lpc = new char[flend]; //read
+    int* INlpc = new int[lengthd*2];//the real data in 1-channal-file
+    int* OUTlpc = new int[lengthd*2];//the real data in 2-channal-file
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+
+    //write to the 2-channal-dat file
+    int file2c_lsize = flend*2;
+    FILE* fp = fopen(ecg_filtered_data_file_path,"w");
+    if (fp == NULL){
+        printf("can't open the output 2-channel file!");
+        return 0;
+    }
+    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
+    char* lpc2 = (char *) buf;
+
+    //write the head file
+    FILE *filehea = fopen(ecg_head_file_path, "w");
+    int sNum = 2;
+    float sr = 128;
+    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
+    int eNum = 0;
+    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    fclose(filehea);
+
+    int delnum=0;
+    // Initialize beat detection and classification.
+    BDAC bdac;
+    bdac.ResetBDAC() ;                                                   //bdac.c
+    int lpcount = 0;
+    ///useinqrs
+    int datahp[1000];
+    int datapeak[1000];
+    int datade[1000];
+    int datadefabs[1000];
+    for(int i=0;i<1000;i++){
+        datahp[i] = 0;
+        datapeak[i] = 0;
+        datade[i] = 0;
+        datadefabs[i] = 0;
+    }
+    int dataid=0;
+
+    int qrslen = 1;
+    int meanlen = 10;
+    int sumlen = 0;
+    int qrsmean[10];//存储峰值的数组
+    int qrsmeannum[10];//存储峰值位置
+    for(int i=0;i<10;i++){
+        qrsmean[i] = 0;
+        qrsmeannum[i] = 0;
+    }
+    int meanid=0;//存储峰值数组的id位置
+    int sumpeak = 0;//多个峰值和
+    int meanpeak = 0;//峰值均值
+    annot.time = 0;
+    int countann = 0;
+    int prenoraml = 0;
+    int data[41];//qrs 41points around qrs
+    int alasttype = 1;
+    int alastrr = 100;
+    int nnoraml = 0;
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+        if(SampleCount%2==0) {
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else {
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
+        }
+
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        ++SampleCount ;
+        // Pass sample to beat detection and classification.
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+        delay = 45;//36+22;
+        //useinqrs
+        datahp[dataid] = bdac.qrsdet1.dataqrs[2];
+        datapeak[dataid] = bdac.qrsdet1.dataqrs[6];
+        datade[dataid] = bdac.qrsdet1.dataqrs[3];
+        datadefabs[dataid] = bdac.qrsdet1.dataqrs[4];
+        //peak
+        if(datapeak[dataid]>0 ){
+           if(qrslen<10 && SampleCount > delay)
+           {
+               sumpeak+=datapeak[dataid];//累积前九个峰值的和
+               qrsmean[meanid] = datapeak[dataid];
+               qrsmeannum[meanid++] = SampleCount;
+           }
+           else if (qrslen==10){
+               meanpeak = int((sumpeak+datapeak[dataid])*1.0/qrslen+0.5);//计算前十个峰值的均值
+               qrsmean[meanid] = datapeak[dataid];
+               qrsmeannum[meanid++] = SampleCount;
+               if(meanpeak<30)
+                   meanpeak = 30;
+               sumpeak = 0;
+               meanid=0;
+               for(int i=0;i<10;i++){
+                   if(qrsmean[i]>0.5*meanpeak && qrsmean[i]<2*meanpeak){
+                       qrsmean[meanid++]=qrsmean[i]; //把该峰值存入计算峰值均值数组
+                       sumpeak += qrsmean[i];        //计算数组内峰值和
+                       sumlen++;                     //数组长度
+                       beatType = 1;
+                       DetectionTime = qrsmeannum[i] - delay ;
+                       DetectionTime *= InputFileSampleFrequency ;
+                       DetectionTime /= SAMPLE_RATE ;
+                       if(annot.time>=DetectionTime){
+                           continue;
+                       }
+                       annot.time = DetectionTime ;
+                       annot.anntyp = beatType ;
+                       annot.aux = NULL ;
+                       annot.width = 10;
+                       annot.height = 100;
+                       annot.rr = 80;
+                       putann2(fileann,&annot,lasttime,0);
+                       //WRITE TO THE TMP
+                       WRITE_THE_TMP2(annot.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                   }
+               }
+               meanpeak = (int)(sumpeak*1.0/sumlen+0.5);
+           }
+           else{
+               countann++;
+               if(annotpre.anntyp == 2 )
+               {
+                   if((SampleCount - delay - annotpre.time)<51)
+                       annotpre.anntyp = 15;
+                   else if( annotpre.height>0.5*prenoraml && annotpre.height>0.8*annotppre.height)
+                       annotpre.anntyp = 1;
+                   else
+                       annotpre.anntyp = 15;
+               }
+               if(datapeak[dataid]>0.5*meanpeak && datapeak[dataid]<100){//2*meanpeak){
+                   if(meanid>=10){
+                       meanid=0;
+                   }
+                   if(sumlen<10){
+                       qrsmean[meanid++]=datapeak[dataid]; //
+                       sumpeak += datapeak[dataid];
+                       sumlen++;
+                       meanpeak = int(sumpeak*1.0/sumlen+0.5);
+                   }
+                   else if(datapeak[dataid]>0.75*meanpeak && datapeak[dataid]<1.25*meanpeak)
+                       {
+                       sumpeak += datapeak[dataid] - qrsmean[meanid];
+                       meanpeak = int(sumpeak*1.0/meanlen+0.5);
+                       qrsmean[meanid++]=datapeak[dataid];
+                   }
+                   beatType = 1;
+                   if(meanpeak>50)
+                       meanpeak = 50;
+                   else if(meanpeak<10)
+                       meanpeak =10;
+               }
+               else if(datapeak[dataid]>=100){//2*meanpeak){
+                   if(datapeak[dataid]>1.5*prenoraml)
+                       beatType = 13;
+                   else{
+                       beatType =1;
+                   }
+               }
+               else{
+                   if(countann>2) {
+                       if  (SampleCount - delay - annotpre.time < 51)
+                           beatType = 15;
+                       else{
+                           beatType = 2;
+                       }
+                   }
+                   else
+                       beatType = 1;
+               }
+               DetectionTime = SampleCount - delay ;
+               DetectionTime *= InputFileSampleFrequency ;
+               DetectionTime /= SAMPLE_RATE ;
+               if(annot.time>=DetectionTime){
+                   continue;
+               }
+               //annot.time = DetectionTime ;
+               annot.anntyp = beatType;
+               //annot.height = datapeak[dataid];
+               annot.aux = NULL ;
+
+               int noid=dataid-delay-12;
+               if (noid<0)
+                   noid +=1000;
+               double sumround = 0;
+               double sumqrs = 0;
+               int mk=0;
+               //int data[41];
+               for(mk;mk<41;mk++){
+                   if(mk<10||mk>30){
+                       sumround += datahp[noid]*datahp[noid];
+                   }
+                   else{
+                       sumqrs+=datahp[noid]*datahp[noid];
+                   }
+                   data[mk] = datahp[noid];
+                   noid++;
+                   if(noid>=1000)
+                       noid=0;
+               }
+               if(annot.anntyp == 1){ //根据qrs和周边的能量比，判断qrs是否是噪声
+
+                   sumround = sqrt(sumround*1.0/20.0);
+                   sumqrs = sqrt(sumqrs*1.0/21.0)*0.5;
+
+                   if(sumround>sumqrs){
+                       annot.anntyp = 13;
+                   }
+               }
+               int maxdn=0,mindn = 1000,maxid = 10,minid =10; //计算中心点左右最大最小值及其位置
+               for(int i=20;i>10;i--)
+               {
+                   if(data[i]>maxdn){
+                       maxdn=data[i];
+                       maxid = i;
+                   }
+                   if(data[i]<mindn){
+                       mindn = data[i];
+                       minid = i;
+                   }
+               }
+               int maxdnr=0,mindnr = 1000,maxidr = 21,minidr =21;
+               for(int i=21;i<31;i++)
+               {
+                   if(data[i]>maxdnr){
+                       maxdnr=data[i];
+                       maxidr = i;
+                   }
+                   if(data[i]<mindnr){
+                       mindnr = data[i];
+                       minidr = i;
+                   }
+               }
+               //int sum = 0;
+               mindn = min(mindn,mindnr);
+               maxdn = max(maxdn,maxdnr);
+
+               annot.width = minidr-minid;
+               annot.height = maxdn-mindn;//
+               if(annot.height>1000)
+                   annot.anntyp = 13;
+               if(annot.time!=0)
+                   annot.rr = DetectionTime - annot.time;
+               annot.time = DetectionTime;
+               //printf("wid:%d, height:%d,rr:%d\n",annot.width,annot.height,annot.rr);
+               if(countann>1){
+                   if(annotpre.anntyp == 15 ){
+                       annot.rr += annotpre.rr;
+                       memcpy(&annotpre,&annot,sizeof(annot));
+                   }
+                   else {
+                       if(annotpre.anntyp == 1 ) {
+                           if (annotpre.width > annotppre.width && annotppre.anntyp == 1 ) {
+                               if(annotpre.width>(annotppre.width+1)){
+                                   if(annotpre.height>annotppre.height*1.15)
+                                       annotpre.anntyp = 5;
+                               }
+                               else if(annotpre.height>annotppre.height*1.15 && annotpre.height>annot.height*1.1 && annotpre.width > (annot.width+1) ){
+                                   annotpre.anntyp = 5;
+                               }
+//                               if(annotpre.anntyp == 5){
+//                                   FILE* filepvc = fopen("pvc.txt","a+");
+//                                   fprintf(filepvc,"detection:%d,height:%d,%d,%d,wid:%d,%d,%d,rr:%d,%d,%d\n",annotpre.time,annotppre.height,annotpre.height,annot.height,annotppre.width,annotpre.width,annot.width,annotppre.rr,annotpre.rr,annot.rr);
+//                                   fclose(filepvc);
+//                               }
+                           }
+                           else if (annotpre.rr < 0.80 * annotppre.rr && alasttype == 1 && alastrr<annotppre.rr*1.05 && alastrr>annotppre.rr*0.95 & annotpre.height<annotppre.height*1.1 && annotpre.height>annotppre.height*0.9)//&& (annotpre.width < (annotppre.width+1)) && (annotpre.width > (annotppre.width-1)) && annotppre.anntyp==1) {
+                           {
+                               if(annotpre.rr <= 0.9* annot.rr )//&& (annotppre.rr - annotpre.rr)>0.1*128&& annotpre.rr >0.90 * annot.rr
+                                   annotpre.anntyp = 9;
+                               else if (annotpre.rr > 0.9 * annot.rr && annotpre.rr < 1.1 * annot.rr) {
+                                   annotpre.anntyp = 9;
+                               }
+//                               if(annotpre.anntyp == 9)
+//                                   printf("detection:%d,height:%d,%d,%d,wid:%d,%d,%d,rr:%d,%d,%d\n",annotpre.time,annotppre.height,annotpre.height,annot.height,annotppre.width,annotpre.width,annot.width,annotppre.rr,annotpre.rr,annot.rr);
+
+
+                           }
+                           else if(annotppre.anntyp==5){
+                               if(annotppre.rr>0.9*annotpre.rr && annotppre.rr<1.1*annotpre.rr  && annotpre.height<annotppre.height*1.05 && annotpre.height>annotppre.height*0.95)
+                               {
+                                   if((annotpre.width < (annotppre.width+1)) && (annotpre.width>(annotppre.width-1)))
+                                       annotpre.anntyp = 5;
+                               }
+
+                           }
+                           else if(annotppre.anntyp==9){
+                               if(annotppre.rr>0.95*annotpre.rr && annotppre.rr<1.05*annotpre.rr && annotpre.height<annotppre.height*1.1 && annotpre.height>annotppre.height*0.9)
+                               {
+                                   if(alasttype == 1 && annotpre.rr < 0.80 * alastrr)
+                                       annotpre.anntyp = 9;
+                                   else if(alasttype==9){
+                                       annotpre.anntyp = 9;
+                                   }
+//                                   if(annotpre.anntyp == 9)
+//                                   printf("detection:%d,height:%d,%d,%d,wid:%d,%d,%d,rr:%d,%d,%d\n",annotpre.time,annotppre.height,annotpre.height,annot.height,annotppre.width,annotpre.width,annot.width,annotppre.rr,annotpre.rr,annot.rr);
+
+                               }
+
+                           }
+
+                       }
+                       if(annotpre.anntyp==1 && annotppre.anntyp == 1 && annotpre.height<annotppre.height*0.2){ //排除分类为normal的小噪声
+                           annot.rr += annotpre.rr;
+                           memcpy(&annotpre,&annot,sizeof(annot));
+                       }
+                       else{
+                           putann2(fileann, &annotpre, lasttime, 0);
+                           //WRITE TO THE TMP
+                           WRITE_THE_TMP3(annotpre.anntyp, m_type, Q_type, S_type, V_type, annotpre.time);
+                           alasttype = annotppre.anntyp;
+                           alastrr = annotppre.rr;
+                           memcpy(&annotppre, &annotpre, sizeof(annotpre));
+                           memcpy(&annotpre, &annot, sizeof(annot));
+                           if (annotppre.anntyp == 1)
+                               prenoraml = annotppre.height;
+                       }
+                   }
+               }
+               else //(countann==1){
+                   memcpy(&annotpre,&annot,sizeof(annot));
+
+           }
+            qrslen++;
+        }
+
+
+        //useinqrs
+        dataid++;
+        if(dataid>=1000)
+            dataid=0;
+        // printf("%d\n",SampleCount);
+        // save the real-data
+        OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+        INlpc[lpcount++] = dataIN;
+    }
+
+//
+    //2 int change to 3 chars
+    int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
+    for(int i=0;i<lengthd*2;i++)
+    {
+        int id = i+dif;
+        if(id>=lengthd*2){
+            id=lengthd*2-1;
+        }
+        lpc2[0] = LOBYTE((short) INlpc[i]);
+        lpc2[1] = 0;
+        lpc2[1] = HIBYTE((short) INlpc[i]) & 0x0f;
+        lpc2[2] = LOBYTE((short) OUTlpc[id]);
+        lpc2[1] |= HIBYTE((short) OUTlpc[id]) << 4;
+        lpc2 += 3;
+    }
+    fwrite( buf, sizeof(char), file2c_lsize, fp);
+    fclose(fp);//close the 2-channal-dat file
+    delete[]buf;
+    delete[]lpc;
+    delete[]INlpc;
+    delete[]OUTlpc;
+
+    wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+    fclose(fileann);//CLOSE WRITE THE annotion FILE
+    fclose(filed); //CLOSE THE 1-channal-DAT FILE
+
+    // Write the new address book back to disk.
+    int Nnum = 0, Vnum=0, Anum = 0;
+    int countN = 0,countV = 0,countA=0,countS=0;
+    bool Nfind1 = false, Vfind1 = false, Afind1 = false;
+    int Nfind1ID = 0, Vfind1ID = 0, Afind1ID = 0;
+    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    Template1 *tmp1N = tmpN->add_template1s();
+    tmp1N->set_id(0);
+    Template1 *tmp1V = tmpV->add_template1s();
+    tmp1V->set_id(0);
+    Template1 *tmp1A = tmpA->add_template1s();
+    tmp1A->set_id(0);
+    Template1 *tmp1S = tmpS->add_template1s();
+    tmp1S->set_id(0);
+
+    if (Q_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1A->add_template2s();
+        tmp1->set_id(0);
+        countA += Q_type.size();
+        for (int k = 0; k < Q_type.size(); k++) {
+            tmp1->add_positions_of_beats(Q_type[k]);
+        }
+    }
+    if (V_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1V->add_template2s();
+        tmp1->set_id(0);
+        countV += V_type.size();
+        for (int k = 0; k < V_type.size(); k++) {
+            tmp1->add_positions_of_beats(V_type[k]);
+        }
+    }
+    if (S_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1S->add_template2s();
+        tmp1->set_id(0);
+        countS += S_type.size();
+        for (int k = 0; k < S_type.size(); k++) {
+            tmp1->add_positions_of_beats(S_type[k]);
+        }
+    }
+    if (m_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1N->add_template2s();
+        tmp1->set_id(0);
+        countN += m_type.size();
+        for (int k = 0; k < m_type.size(); k++) {
+            tmp1->add_positions_of_beats(m_type[k]);
+        }
+    }
+
+    //printf("all tmp = %d\n", Anum + Vnum +Nnum);
+    printf("normal = %d\n",m_type.size());
+    printf("PVC = %d\n",V_type.size());
+    printf("Q = %d\n",Q_type.size());
+    printf("S = %d\n",S_type.size());
+    if (!tmp.SerializeToOstream(&tempfile)) {
+        cerr << "Failed to write address book." << endl;
+        return -1;
+    }
+    google::protobuf::ShutdownProtobufLibrary();
+//
+    return 0;
+}
+
+void checkqrs(int* data, int* dd, int* deabs,data_qrs* qrs){
+    qrs->maxd = 0;
+    qrs->mind = 500;
+    int k=0;
+    for(k=26;k<46;k++){
+        if(data[k]>qrs->maxd){
+            qrs->maxd = data[k];
+            qrs->maxid = k;
+        }
+        if(data[k]<qrs->mind){
+            qrs->mind = data[k];
+            qrs->minid=k;
+        }
+    }
+    int l = 0;
+    int r = 0;
+    for(k=qrs->maxid+2;k<qrs->maxid+22;k++){
+        if(dd[k]*dd[k+1]<=0 && dd[k-1]*dd[k+2]<=0){
+            r=k;
+            k=qrs->maxid+22;
+        }
+    }
+    for(k=qrs->maxid-2;k>qrs->maxid-22;k--){
+        if(dd[k]*dd[k+1]<=0 && dd[k-1]*dd[k+2]<=0){
+            l=k;
+            k=qrs->maxid-22;
+        }
+    }
+    qrs->demax = 0;
+    for(k=16;k<56;k++)
+    {
+        if(deabs[k]>qrs->demax)
+            qrs->demax = deabs[k];
+    }
+    if(l==0||r==0)
+        qrs->wid = 0;
+    else
+        qrs->wid = r-l;
+
+}
+
+void TESTRECORD::WRITE_THE_TMP3(int beatType,std::vector<int>& m_type,std::vector<int>& Q_type,std::vector<int>& S_type,std::vector<int>& V_type, long DetectionTime){
+    //WRITE THE TMP
+    int DetectionT = (int)DetectionTime;
+    //int morphTypenew = bdac.match1.morphType;
+    if(beatType == 13){//Q
+        Q_type.push_back(DetectionT);
+    }
+    else if(beatType == 9) {
+        S_type.push_back(DetectionT);
+    }
+    else if(beatType == 1){
+        m_type.push_back(DetectionT);
+    }
+    else if(beatType == 5){
+        V_type.push_back(DetectionT);
+    }
+}
+
+void TESTRECORD::WRITE_THE_TMP2(int beatType,BDAC bdac,std::vector< std::vector<int> >& m_clusters,std::vector<int>& m_type,std::vector<int>& Q_type,std::vector<int>& S_type,
+                                long DetectionTime,int* modeltypen,int* modeltypev,int* delnum)
+{
+     //WRITE THE TMP
+    int DetectionT = (int)DetectionTime;
+    //int morphTypenew = bdac.match1.morphType;
+    if(beatType == 13){//Q
+        Q_type.push_back(DetectionT);
+    }
+    else if(beatType == 9) {
+        S_type.push_back(DetectionT);
+    }
+    else if(beatType == 1){
+        m_type.push_back(DetectionT);
+    }
+
+
+}
+
+//easy1
+
+/*easy1
+int TESTRECORD::TestRecord_qrs(const char *data_file_path)
+{
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
+    char ecg_annotation_file_path[_MAX_PATH]; //saved file name
+    char ecg_head_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_tmp_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_config_file_path[_MAX_PATH];// the path with config
+    //get the read 1-channal-dat and write 2-channal-dat path
+    string WRITE_PATH,READ_PATH;
+    conf::Instance()->Load(SYS_CONF);
+    conf::Instance()->Get("write_path", WRITE_PATH);
+    conf::Instance()->Get("read_path", READ_PATH);
+    //get the filename and the last foldername
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
+    //get the full file path
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_head_file_path,_MAX_PATH, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_tmp_file_path,_MAX_PATH, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_config_file_path,_MAX_PATH, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    //variable initial
+    Initial();
+    //use the google_protobuf
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    //Template tmp;
+    temp::BeatTemplate *tmpN=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpA=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpV=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpS=tmp.add_beat_templates();
+    tmpA->set_type(BeatTemplate::A);
+    tmpN->set_type(BeatTemplate::N);
+    tmpV->set_type(BeatTemplate::V);
+    tmpS->set_type(BeatTemplate::S);
+    //using in tmp
+    int modeltypev[MAXTYPES+1];
+    int modeltypen[MAXTYPES+1];
+    for(int i=0;i<MAXTYPES+1;i++)
+    {
+        modeltypev[i] = 0;
+        modeltypen[i] = 0;
+    }
+    std::vector< std::vector<int> > m_clusters;
+    std::vector<int> m_type;
+    std::vector<int> Q_type;
+    std::vector<int> S_type;
+    //write to annot
+    WFDB_Annotation annot ;
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+
+    //find QRS
+    int delay;
+    int InputFileSampleFrequency = 128;
+    long SampleCount = 0;
+    long DetectionTime = 0;
+    int beatType, beatMatch ;
+    lasttime =0;
+
+
+    // Open a 1 channel record
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;              // read the 1-channal-locate, once by 3 chars
+    char* lpc = new char[flend]; //read
+    int* INlpc = new int[lengthd*2];//the real data in 1-channal-file
+    int* OUTlpc = new int[lengthd*2];//the real data in 2-channal-file
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+
+    //write to the 2-channal-dat file
+    int file2c_lsize = flend*2;
+    FILE* fp = fopen(ecg_filtered_data_file_path,"w");
+    if (fp == NULL){
+        printf("can't open the output 2-channel file!");
+        return 0;
+    }
+    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
+    char* lpc2 = (char *) buf;
+
+    //write the head file
+    FILE *filehea = fopen(ecg_head_file_path, "w");
+    int sNum = 2;
+    float sr = 128;
+    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
+    int eNum = 0;
+    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    fclose(filehea);
+
+    int delnum=0;
+    // Initialize beat detection and classification.
+    BDAC bdac;
+    bdac.ResetBDAC() ;                                                   //bdac.c
+    int lpcount = 0;
+    ///useinqrs
+    int datahp[1000];
+    int datapeak[1000];
+    int datade[1000];
+    int datadefabs[1000];
+    for(int i=0;i<1000;i++){
+        datahp[i] = 0;
+        datapeak[i] = 0;
+        datade[i] = 0;
+        datadefabs[i] = 0;
+    }
+    int dataid=0;
+    int qrsdata[72];
+    int qrsde[72];
+    int qrsfabs[72];
+    data_qrs qrs_data;
+    int qrslen = 1;
+    int meanlen = 10;
+    int sumlen = 0;
+    int qrsmean[10];//存储峰值的数组
+    int qrsmeannum[10];//存储峰值位置
+    int meanid=0;//存储峰值数组的id位置
+    int sumpeak = 0;//多个峰值和
+    int meanpeak = 0;//峰值均值
+    delay = 36+22;
+    annot.time = 0;
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+        if(SampleCount%2==0) {
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else {
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
+        }
+
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        ++SampleCount ;
+        // Pass sample to beat detection and classification.
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+        delay = 45;//36+22;
+        //useinqrs
+        datahp[dataid] = bdac.qrsdet1.dataqrs[2];
+        datapeak[dataid] = bdac.qrsdet1.dataqrs[6];
+        datade[dataid] = bdac.qrsdet1.dataqrs[3];
+        datadefabs[dataid] = bdac.qrsdet1.dataqrs[4];
+        //peak
+        if(datapeak[dataid]>0 ){
+           if(qrslen<10 && SampleCount > delay)
+           {
+               sumpeak+=datapeak[dataid];//累积前九个峰值的和
+               qrsmean[meanid] = datapeak[dataid];
+               qrsmeannum[meanid++] = SampleCount;
+           }
+           else if (qrslen==10){
+               meanpeak = int((sumpeak+datapeak[dataid])*1.0/qrslen+0.5);//计算前十个峰值的均值
+               qrsmean[meanid] = datapeak[dataid];
+               qrsmeannum[meanid++] = SampleCount;
+               if(meanpeak<30)
+                   meanpeak = 30;
+               sumpeak = 0;
+               meanid=0;
+               for(int i=0;i<10;i++){
+                   if(qrsmean[i]>0.5*meanpeak && qrsmean[i]<2*meanpeak){
+                       qrsmean[meanid++]=qrsmean[i]; //把该峰值存入计算峰值均值数组
+                       sumpeak += qrsmean[i];        //计算数组内峰值和
+                       sumlen++;                     //数组长度
+                       DetectionTime = qrsmeannum[i] - delay ;
+                       DetectionTime *= InputFileSampleFrequency ;
+                       DetectionTime /= SAMPLE_RATE ;
+                       if(annot.time>=DetectionTime){
+                           continue;
+                       }
+                       annot.time = DetectionTime ;
+                       annot.anntyp = 1 ;
+                       annot.aux = NULL ;
+                       putann2(fileann,&annot,lasttime,0);
+                       //WRITE TO THE TMP
+                       //WRITE_THE_TMP(beatType, bdac, m_clusters, m_type, Q_type, DetectionTime, modeltypen, modeltypev,&delnum);
+                       WRITE_THE_TMP2(annot.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                   }
+               }
+               meanpeak = (int)(sumpeak*1.0/sumlen+0.5);
+           }
+           else{
+               if(datapeak[dataid]>0.5*meanpeak && datapeak[dataid]<100){//2*meanpeak){
+                   if(meanid>=10){
+                       meanid=0;
+                   }
+                   if(sumlen<10){
+                       qrsmean[meanid++]=datapeak[dataid]; //
+                       sumpeak += datapeak[dataid];
+                       sumlen++;
+                       meanpeak = int(sumpeak*1.0/sumlen+0.5);
+                   }
+                   else //if(datapeak[dataid]>0.5*meanpeak && datapeak[dataid]<2*meanpeak)
+                       {
+                       sumpeak += datapeak[dataid] - qrsmean[meanid];
+                       meanpeak = int(sumpeak*1.0/meanlen+0.5);
+                       qrsmean[meanid++]=datapeak[dataid];
+                   }
+                   beatType = 1;
+                   if(meanpeak>50)
+                       meanpeak = 50;
+                   else if(meanpeak<10)
+                       meanpeak =10;
+               }
+               else if(datapeak[dataid]>=100){//2*meanpeak){
+                   beatType = 13;
+               }
+               else{
+                   beatType = 9;
+               }
+               DetectionTime = SampleCount - delay ;
+               DetectionTime *= InputFileSampleFrequency ;
+               DetectionTime /= SAMPLE_RATE ;
+               if(annot.time>=DetectionTime){
+                   continue;
+               }
+               annot.time = DetectionTime ;
+               annot.anntyp = beatType;
+               annot.aux = NULL ;
+               putann2(fileann,&annot,lasttime,0);
+               //WRITE TO THE TMP
+               //WRITE_THE_TMP(beatType, bdac, m_clusters, m_type, Q_type, DetectionTime, modeltypen, modeltypev,&delnum);
+               WRITE_THE_TMP2(annot.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+           }
+            qrslen++;
+        }
+
+
+        //useinqrs
+        dataid++;
+        if(dataid>=1000)
+            dataid=0;
+        // printf("%d\n",SampleCount);
+        // save the real-data
+        OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+        INlpc[lpcount++] = dataIN;
+    }
+
+
+    //2 int change to 3 chars
+    int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
+    for(int i=0;i<lengthd*2;i++)
+    {
+        int id = i+dif;
+        if(id>=lengthd*2){
+            id=lengthd*2-1;
+        }
+        lpc2[0] = LOBYTE((short) INlpc[i]);
+        lpc2[1] = 0;
+        lpc2[1] = HIBYTE((short) INlpc[i]) & 0x0f;
+        lpc2[2] = LOBYTE((short) OUTlpc[id]);
+        lpc2[1] |= HIBYTE((short) OUTlpc[id]) << 4;
+        lpc2 += 3;
+    }
+    fwrite( buf, sizeof(char), file2c_lsize, fp);
+    fclose(fp);//close the 2-channal-dat file
+    delete[]buf;
+    delete[]lpc;
+    delete[]INlpc;
+    delete[]OUTlpc;
+    //
+    //printf("Record:%s,%d,%d\n",data_file_name,m_type.size(),delnum);
+    wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+    fclose(fileann);//CLOSE WRITE THE annotion FILE
+    fclose(filed); //CLOSE THE 1-channal-DAT FILE
+
+    // Write the new address book back to disk.
+    int Nnum = 0, Vnum=0, Anum = 0;
+    int countN = 0,countV = 0,countA=0,countS=0;
+    bool Nfind1 = false, Vfind1 = false, Afind1 = false;
+    int Nfind1ID = 0, Vfind1ID = 0, Afind1ID = 0;
+    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    Template1 *tmp1N = tmpN->add_template1s();
+    tmp1N->set_id(0);
+    Template1 *tmp1V = tmpV->add_template1s();
+    tmp1V->set_id(0);
+    Template1 *tmp1A = tmpA->add_template1s();
+    tmp1A->set_id(0);
+    Template1 *tmp1S = tmpS->add_template1s();
+    tmp1S->set_id(0);
+
+    if (Q_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1A->add_template2s();
+        tmp1->set_id(0);
+        countA += Q_type.size();
+        for (int k = 0; k < Q_type.size(); k++) {
+            tmp1->add_positions_of_beats(Q_type[k]);
+        }
+    }
+    if (S_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1S->add_template2s();
+        tmp1->set_id(0);
+        countS += S_type.size();
+        for (int k = 0; k < S_type.size(); k++) {
+            tmp1->add_positions_of_beats(S_type[k]);
+        }
+    }
+    if (m_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1N->add_template2s();
+        tmp1->set_id(0);
+        countN += m_type.size();
+        for (int k = 0; k < m_type.size(); k++) {
+            tmp1->add_positions_of_beats(m_type[k]);
+        }
+    }
+printf("all tmp = %d\n", Anum + Vnum +Nnum);
+if (!tmp.SerializeToOstream(&tempfile)) {
+cerr << "Failed to write address book." << endl;
+return -1;
+}
+google::protobuf::ShutdownProtobufLibrary();
+
+return 0;
+}
+ */
+
+//easy2o
+
+/*
+int TESTRECORD::TestRecord_qrs(const char *data_file_path)
+{
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
+    char ecg_annotation_file_path[_MAX_PATH]; //saved file name
+    char ecg_head_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_tmp_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_config_file_path[_MAX_PATH];// the path with config
+    //get the read 1-channal-dat and write 2-channal-dat path
+    string WRITE_PATH,READ_PATH;
+    conf::Instance()->Load(SYS_CONF);
+    conf::Instance()->Get("write_path", WRITE_PATH);
+    conf::Instance()->Get("read_path", READ_PATH);
+    //get the filename and the last foldername
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
+    //get the full file path
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_head_file_path,_MAX_PATH, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_tmp_file_path,_MAX_PATH, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_config_file_path,_MAX_PATH, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    //variable initial
+    Initial();
+    //use the google_protobuf
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    //Template tmp;
+    temp::BeatTemplate *tmpN=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpA=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpV=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpS=tmp.add_beat_templates();
+    tmpA->set_type(BeatTemplate::A);
+    tmpN->set_type(BeatTemplate::N);
+    tmpV->set_type(BeatTemplate::V);
+    tmpS->set_type(BeatTemplate::S);
+    //using in tmp
+    int modeltypev[MAXTYPES+1];
+    int modeltypen[MAXTYPES+1];
+    for(int i=0;i<MAXTYPES+1;i++)
+    {
+        modeltypev[i] = 0;
+        modeltypen[i] = 0;
+    }
+    std::vector< std::vector<int> > m_clusters;
+    std::vector<int> m_type;
+    std::vector<int> Q_type;
+    std::vector<int> S_type;
+    //write to annot
+    WFDB_Annotation annotppre ;
+    WFDB_Annotation annotpre ;
+    WFDB_Annotation annot ;
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+
+    //find QRS
+    int delay;
+    int InputFileSampleFrequency = 128;
+    long SampleCount = 0;
+    long DetectionTime = 0;
+    int beatType, beatMatch ;
+    lasttime =0;
+
+
+    // Open a 1 channel record
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;              // read the 1-channal-locate, once by 3 chars
+    char* lpc = new char[flend]; //read
+    int* INlpc = new int[lengthd*2];//the real data in 1-channal-file
+    int* OUTlpc = new int[lengthd*2];//the real data in 2-channal-file
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+
+    //write to the 2-channal-dat file
+    int file2c_lsize = flend*2;
+    FILE* fp = fopen(ecg_filtered_data_file_path,"w");
+    if (fp == NULL){
+        printf("can't open the output 2-channel file!");
+        return 0;
+    }
+    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
+    char* lpc2 = (char *) buf;
+
+    //write the head file
+    FILE *filehea = fopen(ecg_head_file_path, "w");
+    int sNum = 2;
+    float sr = 128;
+    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
+    int eNum = 0;
+    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    fclose(filehea);
+
+    int delnum=0;
+    // Initialize beat detection and classification.
+    BDAC bdac;
+    bdac.ResetBDAC() ;                                                   //bdac.c
+    int lpcount = 0;
+    ///useinqrs
+    int datahp[1000];
+    int datapeak[1000];
+    int datade[1000];
+    int datadefabs[1000];
+    for(int i=0;i<1000;i++){
+        datahp[i] = 0;
+        datapeak[i] = 0;
+        datade[i] = 0;
+        datadefabs[i] = 0;
+    }
+    int dataid=0;
+    int qrsdata[72];
+    int qrsde[72];
+    int qrsfabs[72];
+    data_qrs qrs_data;
+    int qrslen = 1;
+    int meanlen = 10;
+    int sumlen = 0;
+    int qrsmean[10];//存储峰值的数组
+    int qrsmeannum[10];//存储峰值位置
+    int meanid=0;//存储峰值数组的id位置
+    int sumpeak = 0;//多个峰值和
+    int meanpeak = 0;//峰值均值
+    delay = 36+22;
+    annot.time = 0;
+    int countann = 0;
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+        if(SampleCount%2==0) {
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else {
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
+        }
+
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        ++SampleCount ;
+        // Pass sample to beat detection and classification.
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+        delay = 45;//36+22;
+        //useinqrs
+        datahp[dataid] = bdac.qrsdet1.dataqrs[2];
+        datapeak[dataid] = bdac.qrsdet1.dataqrs[6];
+        datade[dataid] = bdac.qrsdet1.dataqrs[3];
+        datadefabs[dataid] = bdac.qrsdet1.dataqrs[4];
+        //peak
+        if(datapeak[dataid]>0 ){
+            if(qrslen<10 && SampleCount > delay)
+            {
+                sumpeak+=datapeak[dataid];//累积前九个峰值的和
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+            }
+            else if (qrslen==10){
+                meanpeak = int((sumpeak+datapeak[dataid])*1.0/qrslen+0.5);//计算前十个峰值的均值
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+                if(meanpeak<30)
+                    meanpeak = 30;
+                sumpeak = 0;
+                meanid=0;
+                for(int i=0;i<10;i++){
+                    if(qrsmean[i]>0.5*meanpeak && qrsmean[i]<2*meanpeak){
+                        qrsmean[meanid++]=qrsmean[i]; //把该峰值存入计算峰值均值数组
+                        sumpeak += qrsmean[i];        //计算数组内峰值和
+                        sumlen++;                     //数组长度
+                        DetectionTime = qrsmeannum[i] - delay ;
+                        DetectionTime *= InputFileSampleFrequency ;
+                        DetectionTime /= SAMPLE_RATE ;
+                        if(annot.time>=DetectionTime){
+                            continue;
+                        }
+                        annot.time = DetectionTime ;
+                        annot.anntyp = 1 ;
+                        annot.aux = NULL ;
+                        putann2(fileann,&annot,lasttime,0);
+                        //WRITE TO THE TMP
+                        WRITE_THE_TMP2(annot.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                    }
+                }
+                meanpeak = (int)(sumpeak*1.0/sumlen+0.5);
+            }
+            else{
+                countann++;
+                if(annotpre.anntyp == 2 && (SampleCount - delay - annotpre.time)<51)
+                {
+                    annotpre.anntyp = 9;
+                }
+                else if(annotpre.anntyp == 2){
+                    annotpre.anntyp = 1;
+                }
+                if(datapeak[dataid]>0.5*meanpeak && datapeak[dataid]<100){//2*meanpeak){
+                    if(meanid>=10){
+                        meanid=0;
+                    }
+                    if(sumlen<10){
+                        qrsmean[meanid++]=datapeak[dataid]; //
+                        sumpeak += datapeak[dataid];
+                        sumlen++;
+                        meanpeak = int(sumpeak*1.0/sumlen+0.5);
+                    }
+                    else if(datapeak[dataid]>0.75*meanpeak && datapeak[dataid]<1.25*meanpeak)
+                    {
+                        sumpeak += datapeak[dataid] - qrsmean[meanid];
+                        meanpeak = int(sumpeak*1.0/meanlen+0.5);
+                        qrsmean[meanid++]=datapeak[dataid];
+                    }
+                    beatType = 1;
+                    if(meanpeak>50)
+                        meanpeak = 50;
+                    else if(meanpeak<10)
+                        meanpeak =10;
+                }
+                else if(datapeak[dataid]>=100){//2*meanpeak){
+                    beatType = 13;
+                }
+                else{
+                    if(countann>2) {
+                        if  (SampleCount - delay - annotpre.time < 51)
+                            beatType = 9;
+                        else {
+                            beatType = 2;
+                        }
+                    }
+                }
+                DetectionTime = SampleCount - delay ;
+                DetectionTime *= InputFileSampleFrequency ;
+                DetectionTime /= SAMPLE_RATE ;
+                if(annot.time>=DetectionTime){
+                    continue;
+                }
+                annot.time = DetectionTime ;
+                annot.anntyp = beatType;
+                annot.aux = NULL ;
+
+
+                if(countann>1){
+                    putann2(fileann,&annotpre,lasttime,0);
+                    //WRITE TO THE TMP
+                    //WRITE_THE_TMP2(annotpre.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                    WRITE_THE_TMP2(annotpre.anntyp, bdac, m_clusters, m_type, Q_type, S_type,annotpre.time, modeltypen, modeltypev,&delnum);
+                }
+                if(countann==1){
+                    memcpy(&annotpre,&annot,sizeof(annot));
+                }
+                else{
+                    memcpy(&annotppre,&annotpre,sizeof(annotpre));
+                    memcpy(&annotpre,&annot,sizeof(annot));
+                }
+            }
+            qrslen++;
+        }
+
+
+        //useinqrs
+        dataid++;
+        if(dataid>=1000)
+            dataid=0;
+        // printf("%d\n",SampleCount);
+        // save the real-data
+        OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+        INlpc[lpcount++] = dataIN;
+    }
+
+
+    //2 int change to 3 chars
+    int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
+    for(int i=0;i<lengthd*2;i++)
+    {
+        int id = i+dif;
+        if(id>=lengthd*2){
+            id=lengthd*2-1;
+        }
+        lpc2[0] = LOBYTE((short) INlpc[i]);
+        lpc2[1] = 0;
+        lpc2[1] = HIBYTE((short) INlpc[i]) & 0x0f;
+        lpc2[2] = LOBYTE((short) OUTlpc[id]);
+        lpc2[1] |= HIBYTE((short) OUTlpc[id]) << 4;
+        lpc2 += 3;
+    }
+    fwrite( buf, sizeof(char), file2c_lsize, fp);
+    fclose(fp);//close the 2-channal-dat file
+    delete[]buf;
+    delete[]lpc;
+    delete[]INlpc;
+    delete[]OUTlpc;
+
+    wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+    fclose(fileann);//CLOSE WRITE THE annotion FILE
+    fclose(filed); //CLOSE THE 1-channal-DAT FILE
+
+    // Write the new address book back to disk.
+    int Nnum = 0, Vnum=0, Anum = 0;
+    int countN = 0,countV = 0,countA=0,countS=0;
+    bool Nfind1 = false, Vfind1 = false, Afind1 = false;
+    int Nfind1ID = 0, Vfind1ID = 0, Afind1ID = 0;
+    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    Template1 *tmp1N = tmpN->add_template1s();
+    tmp1N->set_id(0);
+    Template1 *tmp1V = tmpV->add_template1s();
+    tmp1V->set_id(0);
+    Template1 *tmp1A = tmpA->add_template1s();
+    tmp1A->set_id(0);
+    Template1 *tmp1S = tmpS->add_template1s();
+    tmp1S->set_id(0);
+
+    if (Q_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1A->add_template2s();
+        tmp1->set_id(0);
+        countA += Q_type.size();
+        for (int k = 0; k < Q_type.size(); k++) {
+            tmp1->add_positions_of_beats(Q_type[k]);
+        }
+    }
+    if (S_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1S->add_template2s();
+        tmp1->set_id(0);
+        countS += S_type.size();
+        for (int k = 0; k < S_type.size(); k++) {
+            tmp1->add_positions_of_beats(S_type[k]);
+        }
+    }
+    if (m_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1N->add_template2s();
+        tmp1->set_id(0);
+        countN += m_type.size();
+        for (int k = 0; k < m_type.size(); k++) {
+            tmp1->add_positions_of_beats(m_type[k]);
+        }
+    }
+
+    printf("all tmp = %d\n", Anum + Vnum +Nnum);
+    if (!tmp.SerializeToOstream(&tempfile)) {
+        cerr << "Failed to write address book." << endl;
+        return -1;
+    }
+    google::protobuf::ShutdownProtobufLibrary();
+
+    return 0;
+}
+*/
+
+//easy2
+
+/*
+int TESTRECORD::TestRecord_qrs(const char *data_file_path)
+{
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
+    char ecg_annotation_file_path[_MAX_PATH]; //saved file name
+    char ecg_head_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_tmp_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_config_file_path[_MAX_PATH];// the path with config
+    //get the read 1-channal-dat and write 2-channal-dat path
+    string WRITE_PATH,READ_PATH;
+    conf::Instance()->Load(SYS_CONF);
+    conf::Instance()->Get("write_path", WRITE_PATH);
+    conf::Instance()->Get("read_path", READ_PATH);
+    //get the filename and the last foldername
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
+    //get the full file path
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_head_file_path,_MAX_PATH, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_tmp_file_path,_MAX_PATH, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_config_file_path,_MAX_PATH, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    //variable initial
+    Initial();
+    //use the google_protobuf
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    //Template tmp;
+    temp::BeatTemplate *tmpN=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpA=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpV=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpS=tmp.add_beat_templates();
+    tmpA->set_type(BeatTemplate::A);
+    tmpN->set_type(BeatTemplate::N);
+    tmpV->set_type(BeatTemplate::V);
+    tmpS->set_type(BeatTemplate::S);
+    //using in tmp
+    int modeltypev[MAXTYPES+1];
+    int modeltypen[MAXTYPES+1];
+    for(int i=0;i<MAXTYPES+1;i++)
+    {
+        modeltypev[i] = 0;
+        modeltypen[i] = 0;
+    }
+    std::vector< std::vector<int> > m_clusters;
+    std::vector<int> m_type;
+    std::vector<int> Q_type;
+    std::vector<int> S_type;
+    //write to annot
+    WFDB_Annotation annotppre ;
+    WFDB_Annotation annotpre ;
+    WFDB_Annotation annot ;
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+
+    //find QRS
+    int delay;
+    int InputFileSampleFrequency = 128;
+    long SampleCount = 0;
+    long DetectionTime = 0;
+    int beatType, beatMatch ;
+    lasttime =0;
+
+
+    // Open a 1 channel record
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;              // read the 1-channal-locate, once by 3 chars
+    char* lpc = new char[flend]; //read
+    int* INlpc = new int[lengthd*2];//the real data in 1-channal-file
+    int* OUTlpc = new int[lengthd*2];//the real data in 2-channal-file
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+
+    //write to the 2-channal-dat file
+    int file2c_lsize = flend*2;
+    FILE* fp = fopen(ecg_filtered_data_file_path,"w");
+    if (fp == NULL){
+        printf("can't open the output 2-channel file!");
+        return 0;
+    }
+    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
+    char* lpc2 = (char *) buf;
+
+    //write the head file
+    FILE *filehea = fopen(ecg_head_file_path, "w");
+    int sNum = 2;
+    float sr = 128;
+    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
+    int eNum = 0;
+    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    fclose(filehea);
+
+    int delnum=0;
+    // Initialize beat detection and classification.
+    BDAC bdac;
+    bdac.ResetBDAC() ;                                                   //bdac.c
+    int lpcount = 0;
+    ///useinqrs
+    int datahp[1000];
+    int datapeak[1000];
+    int datade[1000];
+    int datadefabs[1000];
+    for(int i=0;i<1000;i++){
+        datahp[i] = 0;
+        datapeak[i] = 0;
+        datade[i] = 0;
+        datadefabs[i] = 0;
+    }
+    int dataid=0;
+    int qrsdata[72];
+    int qrsde[72];
+    int qrsfabs[72];
+    data_qrs qrs_data;
+    int qrslen = 1;
+    int meanlen = 10;
+    int sumlen = 0;
+    int qrsmean[10];//存储峰值的数组
+    int qrsmeannum[10];//存储峰值位置
+    int meanid=0;//存储峰值数组的id位置
+    int sumpeak = 0;//多个峰值和
+    int meanpeak = 0;//峰值均值
+    delay = 36+22;
+    annot.time = 0;
+    int countann = 0;
+    int prenoraml = 0;
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+        if(SampleCount%2==0) {
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else {
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
+        }
+
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        ++SampleCount ;
+        // Pass sample to beat detection and classification.
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+        delay = 45;//36+22;
+        //useinqrs
+        datahp[dataid] = bdac.qrsdet1.dataqrs[2];
+        datapeak[dataid] = bdac.qrsdet1.dataqrs[6];
+        datade[dataid] = bdac.qrsdet1.dataqrs[3];
+        datadefabs[dataid] = bdac.qrsdet1.dataqrs[4];
+        //peak
+        if(datapeak[dataid]>0 ){
+            if(qrslen<10 && SampleCount > delay)
+            {
+                sumpeak+=datapeak[dataid];//累积前九个峰值的和
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+            }
+            else if (qrslen==10){
+                meanpeak = int((sumpeak+datapeak[dataid])*1.0/qrslen+0.5);//计算前十个峰值的均值
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+                if(meanpeak<30)
+                    meanpeak = 30;
+                sumpeak = 0;
+                meanid=0;
+                for(int i=0;i<10;i++){
+                    if(qrsmean[i]>0.5*meanpeak && qrsmean[i]<2*meanpeak){
+                        qrsmean[meanid++]=qrsmean[i]; //把该峰值存入计算峰值均值数组
+                        sumpeak += qrsmean[i];        //计算数组内峰值和
+                        sumlen++;                     //数组长度
+                        DetectionTime = qrsmeannum[i] - delay ;
+                        DetectionTime *= InputFileSampleFrequency ;
+                        DetectionTime /= SAMPLE_RATE ;
+                        if(annot.time>=DetectionTime){
+                            continue;
+                        }
+                        annot.time = DetectionTime ;
+                        annot.anntyp = 1 ;
+                        annot.aux = NULL ;
+                        putann2(fileann,&annot,lasttime,0);
+                        //WRITE TO THE TMP
+                        WRITE_THE_TMP2(annot.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                    }
+                }
+                meanpeak = (int)(sumpeak*1.0/sumlen+0.5);
+            }
+            else{
+                countann++;
+                if(annotpre.anntyp == 2 )
+                {
+                    if((SampleCount - delay - annotpre.time)<51)
+                        annotpre.anntyp = 9;
+                    else if( annotpre.height>0.5*prenoraml)
+                        annotpre.anntyp = 1;
+                    else
+                        annotpre.anntyp = 9;
+                }
+                if(datapeak[dataid]>0.5*meanpeak && datapeak[dataid]<100){//2*meanpeak){
+                    if(meanid>=10){
+                        meanid=0;
+                    }
+                    if(sumlen<10){
+                        qrsmean[meanid++]=datapeak[dataid]; //
+                        sumpeak += datapeak[dataid];
+                        sumlen++;
+                        meanpeak = int(sumpeak*1.0/sumlen+0.5);
+                    }
+                    else if(datapeak[dataid]>0.75*meanpeak && datapeak[dataid]<1.25*meanpeak)
+                    {
+                        sumpeak += datapeak[dataid] - qrsmean[meanid];
+                        meanpeak = int(sumpeak*1.0/meanlen+0.5);
+                        qrsmean[meanid++]=datapeak[dataid];
+                    }
+                    beatType = 1;
+                    if(meanpeak>50)
+                        meanpeak = 50;
+                    else if(meanpeak<10)
+                        meanpeak =10;
+                }
+                else if(datapeak[dataid]>=100){//2*meanpeak){
+                    beatType = 13;
+                }
+                else{
+                    if(countann>2) {
+                        if  (SampleCount - delay - annotpre.time < 51)
+                            beatType = 9;
+                        else{
+                            beatType = 2;
+                        }
+                    }
+                }
+                DetectionTime = SampleCount - delay ;
+                DetectionTime *= InputFileSampleFrequency ;
+                DetectionTime /= SAMPLE_RATE ;
+                if(annot.time>=DetectionTime){
+                    continue;
+                }
+                annot.time = DetectionTime ;
+                annot.anntyp = beatType;
+                annot.height = datapeak[dataid];
+                annot.aux = NULL ;
+
+
+                if(countann>1){
+                    putann2(fileann,&annotpre,lasttime,0);
+                    //WRITE TO THE TMP
+                    //WRITE_THE_TMP2(annotpre.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                    WRITE_THE_TMP2(annotpre.anntyp, bdac, m_clusters, m_type, Q_type, S_type,annotpre.time, modeltypen, modeltypev,&delnum);
+                }
+                if(countann==1){
+                    memcpy(&annotpre,&annot,sizeof(annot));
+                }
+                else{
+                    memcpy(&annotppre,&annotpre,sizeof(annotpre));
+                    memcpy(&annotpre,&annot,sizeof(annot));
+                    if (annotppre.anntyp==1)
+                        prenoraml = annotppre.height;
+                }
+            }
+            qrslen++;
+        }
+
+
+        //useinqrs
+        dataid++;
+        if(dataid>=1000)
+            dataid=0;
+        // printf("%d\n",SampleCount);
+        // save the real-data
+        OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+        INlpc[lpcount++] = dataIN;
+    }
+
+//
+    //2 int change to 3 chars
+    int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
+    for(int i=0;i<lengthd*2;i++)
+    {
+        int id = i+dif;
+        if(id>=lengthd*2){
+            id=lengthd*2-1;
+        }
+        lpc2[0] = LOBYTE((short) INlpc[i]);
+        lpc2[1] = 0;
+        lpc2[1] = HIBYTE((short) INlpc[i]) & 0x0f;
+        lpc2[2] = LOBYTE((short) OUTlpc[id]);
+        lpc2[1] |= HIBYTE((short) OUTlpc[id]) << 4;
+        lpc2 += 3;
+    }
+    fwrite( buf, sizeof(char), file2c_lsize, fp);
+    fclose(fp);//close the 2-channal-dat file
+    delete[]buf;
+    delete[]lpc;
+    delete[]INlpc;
+    delete[]OUTlpc;
+
+    wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+    fclose(fileann);//CLOSE WRITE THE annotion FILE
+    fclose(filed); //CLOSE THE 1-channal-DAT FILE
+
+    // Write the new address book back to disk.
+    int Nnum = 0, Vnum=0, Anum = 0;
+    int countN = 0,countV = 0,countA=0,countS=0;
+    bool Nfind1 = false, Vfind1 = false, Afind1 = false;
+    int Nfind1ID = 0, Vfind1ID = 0, Afind1ID = 0;
+    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    Template1 *tmp1N = tmpN->add_template1s();
+    tmp1N->set_id(0);
+    Template1 *tmp1V = tmpV->add_template1s();
+    tmp1V->set_id(0);
+    Template1 *tmp1A = tmpA->add_template1s();
+    tmp1A->set_id(0);
+    Template1 *tmp1S = tmpS->add_template1s();
+    tmp1S->set_id(0);
+
+    if (Q_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1A->add_template2s();
+        tmp1->set_id(0);
+        countA += Q_type.size();
+        for (int k = 0; k < Q_type.size(); k++) {
+            tmp1->add_positions_of_beats(Q_type[k]);
+        }
+    }
+    if (S_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1S->add_template2s();
+        tmp1->set_id(0);
+        countS += S_type.size();
+        for (int k = 0; k < S_type.size(); k++) {
+            tmp1->add_positions_of_beats(S_type[k]);
+        }
+    }
+    if (m_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1N->add_template2s();
+        tmp1->set_id(0);
+        countN += m_type.size();
+        for (int k = 0; k < m_type.size(); k++) {
+            tmp1->add_positions_of_beats(m_type[k]);
+        }
+    }
+
+    printf("all tmp = %d\n", Anum + Vnum +Nnum);
+    if (!tmp.SerializeToOstream(&tempfile)) {
+        cerr << "Failed to write address book." << endl;
+        return -1;
+    }
+    google::protobuf::ShutdownProtobufLibrary();
+//
+    return 0;
+}*/
+
+//easy3
+
+/*int TESTRECORD::TestRecord_qrs(const char *data_file_path)
+{
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
+    char ecg_annotation_file_path[_MAX_PATH]; //saved file name
+    char ecg_head_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_tmp_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_config_file_path[_MAX_PATH];// the path with config
+    //get the read 1-channal-dat and write 2-channal-dat path
+    string WRITE_PATH,READ_PATH;
+    conf::Instance()->Load(SYS_CONF);
+    conf::Instance()->Get("write_path", WRITE_PATH);
+    conf::Instance()->Get("read_path", READ_PATH);
+    //get the filename and the last foldername
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
+    //get the full file path
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_head_file_path,_MAX_PATH, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_tmp_file_path,_MAX_PATH, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_config_file_path,_MAX_PATH, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    //variable initial
+    Initial();
+    //use the google_protobuf
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    //Template tmp;
+    temp::BeatTemplate *tmpN=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpA=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpV=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpS=tmp.add_beat_templates();
+    tmpA->set_type(BeatTemplate::A);
+    tmpN->set_type(BeatTemplate::N);
+    tmpV->set_type(BeatTemplate::V);
+    tmpS->set_type(BeatTemplate::S);
+    //using in tmp
+    int modeltypev[MAXTYPES+1];
+    int modeltypen[MAXTYPES+1];
+    for(int i=0;i<MAXTYPES+1;i++)
+    {
+        modeltypev[i] = 0;
+        modeltypen[i] = 0;
+    }
+    std::vector< std::vector<int> > m_clusters;
+    std::vector<int> m_type;
+    std::vector<int> Q_type;
+    std::vector<int> S_type;
+    std::vector<int> V_type;
+    //write to annot
+    WFDB_Annotation annotppre ;
+    WFDB_Annotation annotpre ;
+    WFDB_Annotation annot ;
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+
+    //find QRS
+    int delay = 45;
+    int InputFileSampleFrequency = 128;
+    long SampleCount = 0;
+    long DetectionTime = 0;
+    int beatType, beatMatch ;
+    lasttime =0;
+
+
+    // Open a 1 channel record
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;              // read the 1-channal-locate, once by 3 chars
+    char* lpc = new char[flend]; //read
+    int* INlpc = new int[lengthd*2];//the real data in 1-channal-file
+    int* OUTlpc = new int[lengthd*2];//the real data in 2-channal-file
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+
+    //write to the 2-channal-dat file
+    int file2c_lsize = flend*2;
+    FILE* fp = fopen(ecg_filtered_data_file_path,"w");
+    if (fp == NULL){
+        printf("can't open the output 2-channel file!");
+        return 0;
+    }
+    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
+    char* lpc2 = (char *) buf;
+
+    //write the head file
+    FILE *filehea = fopen(ecg_head_file_path, "w");
+    int sNum = 2;
+    float sr = 128;
+    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
+    int eNum = 0;
+    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    fclose(filehea);
+
+    int delnum=0;
+    // Initialize beat detection and classification.
+    BDAC bdac;
+    bdac.ResetBDAC() ;                                                   //bdac.c
+    int lpcount = 0;
+    ///useinqrs
+    int datahp[1000];
+    int datapeak[1000];
+    int datade[1000];
+    int datadefabs[1000];
+    for(int i=0;i<1000;i++){
+        datahp[i] = 0;
+        datapeak[i] = 0;
+        datade[i] = 0;
+        datadefabs[i] = 0;
+    }
+    int dataid=0;
+
+    int qrsdata[72];
+    int qrsde[72];
+    int qrsfabs[72];
+    data_qrs qrs_data;
+    int qrslen = 1;
+    int meanlen = 10;
+    int sumlen = 0;
+    int qrsmean[10];//存储峰值的数组
+    int qrsmeannum[10];//存储峰值位置
+    for(int i=0;i<10;i++){
+        qrsmean[i] = 0;
+        qrsmeannum[i] = 0;
+    }
+    int meanid=0;//存储峰值数组的id位置
+    int sumpeak = 0;//多个峰值和
+    int meanpeak = 0;//峰值均值
+    annot.time = 0;
+    int countann = 0;
+    int prenoraml = 0;
+    int data[41];//qrs 41points around qrs
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+        if(SampleCount%2==0) {
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else {
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
+        }
+
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        ++SampleCount ;
+        // Pass sample to beat detection and classification.
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+        delay = 45;//36+22;
+        //useinqrs
+        datahp[dataid] = bdac.qrsdet1.dataqrs[2];
+        datapeak[dataid] = bdac.qrsdet1.dataqrs[6];
+        datade[dataid] = bdac.qrsdet1.dataqrs[3];
+        datadefabs[dataid] = bdac.qrsdet1.dataqrs[4];
+        //peak
+        if(datapeak[dataid]>0 ){
+            if(qrslen<10 && SampleCount > delay)
+            {
+                sumpeak+=datapeak[dataid];//累积前九个峰值的和
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+            }
+            else if (qrslen==10){
+                meanpeak = int((sumpeak+datapeak[dataid])*1.0/qrslen+0.5);//计算前十个峰值的均值
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+                if(meanpeak<30)
+                    meanpeak = 30;
+                sumpeak = 0;
+                meanid=0;
+                for(int i=0;i<10;i++){
+                    if(qrsmean[i]>0.5*meanpeak && qrsmean[i]<2*meanpeak){
+                        qrsmean[meanid++]=qrsmean[i]; //把该峰值存入计算峰值均值数组
+                        sumpeak += qrsmean[i];        //计算数组内峰值和
+                        sumlen++;                     //数组长度
+                        DetectionTime = qrsmeannum[i] - delay ;
+                        DetectionTime *= InputFileSampleFrequency ;
+                        DetectionTime /= SAMPLE_RATE ;
+                        if(annot.time>=DetectionTime){
+                            continue;
+                        }
+                        annot.time = DetectionTime ;
+                        annot.anntyp = 1 ;
+                        annot.aux = NULL ;
+                        putann2(fileann,&annot,lasttime,0);
+                        //WRITE TO THE TMP
+                        WRITE_THE_TMP2(annot.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                    }
+                }
+                meanpeak = (int)(sumpeak*1.0/sumlen+0.5);
+            }
+            else{
+                countann++;
+                if(annotpre.anntyp == 2 )
+                {
+                    if((SampleCount - delay - annotpre.time)<51)
+                        annotpre.anntyp = 9;
+                    else if( annotpre.height>0.5*prenoraml && annotpre.height>0.8*annotpre.height)
+                        annotpre.anntyp = 1;
+                    else
+                        annotpre.anntyp = 9;
+                }
+                if(datapeak[dataid]>0.5*meanpeak && datapeak[dataid]<100){//2*meanpeak){
+                    if(meanid>=10){
+                        meanid=0;
+                    }
+                    if(sumlen<10){
+                        qrsmean[meanid++]=datapeak[dataid]; //
+                        sumpeak += datapeak[dataid];
+                        sumlen++;
+                        meanpeak = int(sumpeak*1.0/sumlen+0.5);
+                    }
+                    else if(datapeak[dataid]>0.75*meanpeak && datapeak[dataid]<1.25*meanpeak)
+                    {
+                        sumpeak += datapeak[dataid] - qrsmean[meanid];
+                        meanpeak = int(sumpeak*1.0/meanlen+0.5);
+                        qrsmean[meanid++]=datapeak[dataid];
+                    }
+                    beatType = 1;
+                    if(meanpeak>50)
+                        meanpeak = 50;
+                    else if(meanpeak<10)
+                        meanpeak =10;
+                }
+                else if(datapeak[dataid]>=100){//2*meanpeak){
+                    if(datapeak[dataid]>1.5*prenoraml)
+                        beatType = 13;
+                    else{
+                        beatType =1;
+                    }
+                }
+                else{
+                    if(countann>2) {
+                        if  (SampleCount - delay - annotpre.time < 51)
+                            beatType = 9;
+                        else{
+                            beatType = 2;
+                        }
+                    }
+                }
+                DetectionTime = SampleCount - delay ;
+                DetectionTime *= InputFileSampleFrequency ;
+                DetectionTime /= SAMPLE_RATE ;
+                if(annot.time>=DetectionTime){
+                    continue;
+                }
+                annot.time = DetectionTime ;
+                annot.anntyp = beatType;
+                annot.height = datapeak[dataid];
+                annot.aux = NULL ;
+
+                if(countann>1){
+                    if(annotpre.anntyp==1 ){
+                        int diftime=annot.time-annotpre.time;
+                        if(diftime<940){
+                            int noid=dataid-delay-diftime-12;
+                            if (noid<0)
+                                noid +=1000;
+                            double sumround = 0;
+                            double sumqrs = 0;
+                            int mk=0;
+                            //int data[41];
+                            for(mk;mk<41;mk++){
+                                if(mk<10||mk>30){
+                                    sumround += datahp[noid]*datahp[noid];
+                                }
+                                else{
+                                    sumqrs+=datahp[noid]*datahp[noid];
+                                }
+                                data[mk] = datahp[noid];
+                                noid++;
+                                if(noid>=1000)
+                                    noid=0;
+                            }
+                            sumround = sqrt(sumround*1.0/20.0);
+                            sumqrs = sqrt(sumqrs*1.0/21.0)*0.5;
+
+                            if(sumround>sumqrs){
+                                //printf("DETECTION = %d, sumround = %f, sumqrs = %f\n",annotpre.time, sumround,sumqrs);
+                                annotpre.anntyp = 5;
+                            }
+
+                        }
+                    }
+                    putann2(fileann,&annotpre,lasttime,0);
+                    //WRITE TO THE TMP
+                    //WRITE_THE_TMP2(annotpre.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                    WRITE_THE_TMP3(annotpre.anntyp, m_type, Q_type, S_type, V_type, annotpre.time);
+                }
+                if(countann==1){
+                    memcpy(&annotpre,&annot,sizeof(annot));
+                }
+                else{
+                    memcpy(&annotppre,&annotpre,sizeof(annotpre));
+                    memcpy(&annotpre,&annot,sizeof(annot));
+                    if (annotppre.anntyp==1)
+                        prenoraml = annotppre.height;
+                }
+            }
+            qrslen++;
+        }
+
+
+        //useinqrs
+        dataid++;
+        if(dataid>=1000)
+            dataid=0;
+        // printf("%d\n",SampleCount);
+        // save the real-data
+        OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+        INlpc[lpcount++] = dataIN;
+    }
+
+//
+    //2 int change to 3 chars
+    int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
+    for(int i=0;i<lengthd*2;i++)
+    {
+        int id = i+dif;
+        if(id>=lengthd*2){
+            id=lengthd*2-1;
+        }
+        lpc2[0] = LOBYTE((short) INlpc[i]);
+        lpc2[1] = 0;
+        lpc2[1] = HIBYTE((short) INlpc[i]) & 0x0f;
+        lpc2[2] = LOBYTE((short) OUTlpc[id]);
+        lpc2[1] |= HIBYTE((short) OUTlpc[id]) << 4;
+        lpc2 += 3;
+    }
+    fwrite( buf, sizeof(char), file2c_lsize, fp);
+    fclose(fp);//close the 2-channal-dat file
+    delete[]buf;
+    delete[]lpc;
+    delete[]INlpc;
+    delete[]OUTlpc;
+
+    wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+    fclose(fileann);//CLOSE WRITE THE annotion FILE
+    fclose(filed); //CLOSE THE 1-channal-DAT FILE
+
+    // Write the new address book back to disk.
+    int Nnum = 0, Vnum=0, Anum = 0;
+    int countN = 0,countV = 0,countA=0,countS=0;
+    bool Nfind1 = false, Vfind1 = false, Afind1 = false;
+    int Nfind1ID = 0, Vfind1ID = 0, Afind1ID = 0;
+    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    Template1 *tmp1N = tmpN->add_template1s();
+    tmp1N->set_id(0);
+    Template1 *tmp1V = tmpV->add_template1s();
+    tmp1V->set_id(0);
+    Template1 *tmp1A = tmpA->add_template1s();
+    tmp1A->set_id(0);
+    Template1 *tmp1S = tmpS->add_template1s();
+    tmp1S->set_id(0);
+
+    if (Q_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1A->add_template2s();
+        tmp1->set_id(0);
+        countA += Q_type.size();
+        for (int k = 0; k < Q_type.size(); k++) {
+            tmp1->add_positions_of_beats(Q_type[k]);
+        }
+    }
+    if (V_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1V->add_template2s();
+        tmp1->set_id(0);
+        countV += V_type.size();
+        for (int k = 0; k < V_type.size(); k++) {
+            tmp1->add_positions_of_beats(V_type[k]);
+        }
+    }
+    if (S_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1S->add_template2s();
+        tmp1->set_id(0);
+        countS += S_type.size();
+        for (int k = 0; k < S_type.size(); k++) {
+            tmp1->add_positions_of_beats(S_type[k]);
+        }
+    }
+    if (m_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1N->add_template2s();
+        tmp1->set_id(0);
+        countN += m_type.size();
+        for (int k = 0; k < m_type.size(); k++) {
+            tmp1->add_positions_of_beats(m_type[k]);
+        }
+    }
+
+    //printf("all tmp = %d\n", Anum + Vnum +Nnum);
+    printf("normal = %d\n",m_type.size());
+    printf("PVC = %d\n",V_type.size());
+    printf("Q = %d\n",Q_type.size());
+    printf("S = %d\n",S_type.size());
+    if (!tmp.SerializeToOstream(&tempfile)) {
+        cerr << "Failed to write address book." << endl;
+        return -1;
+    }
+    google::protobuf::ShutdownProtobufLibrary();
+//
+    return 0;
+}*/
+
+//m205num2,结果只有normal和q
+
+/*int TESTRECORD::TestRecord_qrs(const char *data_file_path)
+{
+    char *data_file_name;
+    char date_tmp[_MAX_PATH]; //XXX/201414/
+    char ecg_file_name[_MAX_PATH];
+    char date_path[_MAX_PATH];
+    char ecg_filtered_data_file_path[_MAX_PATH]; //saved file name
+    char ecg_annotation_file_path[_MAX_PATH]; //saved file name
+    char ecg_head_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_tmp_file_path[_MAX_PATH]; //saved file name           7
+    char ecg_config_file_path[_MAX_PATH];// the path with config
+    //get the read 1-channal-dat and write 2-channal-dat path
+    string WRITE_PATH,READ_PATH;
+    conf::Instance()->Load(SYS_CONF);
+    conf::Instance()->Get("write_path", WRITE_PATH);
+    conf::Instance()->Get("read_path", READ_PATH);
+    //get the filename and the last foldername
+    memset(date_tmp, 0, _MAX_PATH);
+    data_file_name = get_file_name(data_file_path);
+    strncpy(ecg_file_name, data_file_name,_MAX_PATH);
+    remove_extension(ecg_file_name);
+    strncpy(date_tmp, data_file_path, strlen(data_file_path) - strlen(data_file_name) - 1);
+    strncpy(date_path, get_file_name(date_tmp),_MAX_PATH);
+    //get the full file path
+    snprintf(ecg_filtered_data_file_path,_MAX_PATH, "%s/%s/%s.dat", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_annotation_file_path,_MAX_PATH, "%s/%s/%s.bsp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_head_file_path,_MAX_PATH, "%s/%s/%s.hea", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_tmp_file_path,_MAX_PATH, "%s/%s/%s.tmp", WRITE_PATH.c_str(), date_path, ecg_file_name);
+    snprintf(ecg_config_file_path,_MAX_PATH, "%s/%s/%s.cnf", READ_PATH.c_str(), date_path, ecg_file_name);
+    //variable initial
+    Initial();
+    //use the google_protobuf
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+    //Template tmp;
+    temp::BeatTemplate *tmpN=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpA=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpV=tmp.add_beat_templates();
+    temp::BeatTemplate *tmpS=tmp.add_beat_templates();
+    tmpA->set_type(BeatTemplate::A);
+    tmpN->set_type(BeatTemplate::N);
+    tmpV->set_type(BeatTemplate::V);
+    tmpS->set_type(BeatTemplate::S);
+    //using in tmp
+    int modeltypev[MAXTYPES+1];
+    int modeltypen[MAXTYPES+1];
+    for(int i=0;i<MAXTYPES+1;i++)
+    {
+        modeltypev[i] = 0;
+        modeltypen[i] = 0;
+    }
+    std::vector< std::vector<int> > m_clusters;
+    std::vector<int> m_type;
+    std::vector<int> Q_type;
+    std::vector<int> S_type;
+    std::vector<int> V_type;
+    //write to annot
+    WFDB_Annotation annotppre ;
+    WFDB_Annotation annotpre ;
+    WFDB_Annotation annot ;
+    FILE *fileann = fopen(ecg_annotation_file_path,"wb");//
+
+    //find QRS
+    int delay = 45;
+    int InputFileSampleFrequency = 128;
+    long SampleCount = 0;
+    long DetectionTime = 0;
+    int beatType, beatMatch ;
+    lasttime =0;
+
+
+    // Open a 1 channel record
+    FILE* filed = fopen(data_file_path,"r");//
+    if(!filed){
+        printf("please check the file:%s!",data_file_path);
+        return 0;
+    }
+    fseek(filed,0,2);
+    long flend=ftell(filed); // 得到文件大小
+    int lengthd = flend/3;
+    int posd=0;              // read the 1-channal-locate, once by 3 chars
+    char* lpc = new char[flend]; //read
+    int* INlpc = new int[lengthd*2];//the real data in 1-channal-file
+    int* OUTlpc = new int[lengthd*2];//the real data in 2-channal-file
+    fseek(filed, 0, SEEK_SET);
+    fread(lpc, flend,1,filed);
+    int dataIN;
+
+    //write to the 2-channal-dat file
+    int file2c_lsize = flend*2;
+    FILE* fp = fopen(ecg_filtered_data_file_path,"w");
+    if (fp == NULL){
+        printf("can't open the output 2-channel file!");
+        return 0;
+    }
+    char *buf = new char[file2c_lsize];//(char *) malloc(file2c_lsize);
+    char* lpc2 = (char *) buf;
+
+    //write the head file
+    FILE *filehea = fopen(ecg_head_file_path, "w");
+    int sNum = 2;
+    float sr = 128;
+    int res = fprintf(filehea, "%s %d %3.0f %d\n", ecg_file_name, sNum, sr, file2c_lsize);
+    int eNum = 0;
+    int umv = 549, bits = 212, resolution = 12, zero = 0, crc = 0, firstdata = 0;
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s\n", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    res = fprintf(filehea, "%s.dat %d %d %d %d %d %d %d %s", ecg_file_name, bits, umv, resolution, zero, firstdata, crc, 0, "v5");
+    fclose(filehea);
+
+    int delnum=0;
+    // Initialize beat detection and classification.
+    BDAC bdac;
+    bdac.ResetBDAC() ;                                                   //bdac.c
+    int lpcount = 0;
+    ///useinqrs
+    int datahp[1000];
+    int datapeak[1000];
+    int datade[1000];
+    int datadefabs[1000];
+    for(int i=0;i<1000;i++){
+        datahp[i] = 0;
+        datapeak[i] = 0;
+        datade[i] = 0;
+        datadefabs[i] = 0;
+    }
+    int dataid=0;
+
+    int qrslen = 1;
+    int meanlen = 10;
+    int sumlen = 0;
+    int qrsmean[10];//存储峰值的数组
+    int qrsmeannum[10];//存储峰值位置
+    for(int i=0;i<10;i++){
+        qrsmean[i] = 0;
+        qrsmeannum[i] = 0;
+    }
+    int meanid=0;//存储峰值数组的id位置
+    int sumpeak = 0;//多个峰值和
+    int meanpeak = 0;//峰值均值
+    annot.time = 0;
+    int countann = 0;
+    int prenoraml = 0;
+    int data[41];//qrs 41points around qrs
+    // Read data from MIT/BIH file until tre is none left.
+    while( posd < lengthd)  //local
+    {
+        if(SampleCount%2==0) {
+            dataIN = MAKEWORD(lpc[posd * 3 ], (lpc[posd * 3 + 1 ] & 0x0f));
+        }
+        else {
+            dataIN = MAKEWORD(lpc[posd * 3 + 2], (lpc[posd * 3 + 1] & 0xf0) >> 4);
+            posd++;
+        }
+
+        if (dataIN & 0x800)
+            dataIN |= ~(0xfff); //negative  data, make all the high bit(12 and after) 1
+        else dataIN &= 0xfff;        //positive data, make all the hight bit 0
+        ++SampleCount ;
+        // Pass sample to beat detection and classification.
+        delay = bdac.BeatDetectAndClassify(dataIN, &beatType, &beatMatch) ;    //bdac.c
+        delay = 45;//36+22;
+        //useinqrs
+        datahp[dataid] = bdac.qrsdet1.dataqrs[2];
+        datapeak[dataid] = bdac.qrsdet1.dataqrs[6];
+        datade[dataid] = bdac.qrsdet1.dataqrs[3];
+        datadefabs[dataid] = bdac.qrsdet1.dataqrs[4];
+        //peak
+        if(datapeak[dataid]>0 ){
+            if(qrslen<10 && SampleCount > delay)
+            {
+                sumpeak+=datapeak[dataid];//累积前九个峰值的和
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+            }
+            else if (qrslen==10){
+                meanpeak = int((sumpeak+datapeak[dataid])*1.0/qrslen+0.5);//计算前十个峰值的均值
+                qrsmean[meanid] = datapeak[dataid];
+                qrsmeannum[meanid++] = SampleCount;
+                if(meanpeak<30)
+                    meanpeak = 30;
+                sumpeak = 0;
+                meanid=0;
+                for(int i=0;i<10;i++){
+                    if(qrsmean[i]>0.5*meanpeak && qrsmean[i]<2*meanpeak){
+                        qrsmean[meanid++]=qrsmean[i]; //把该峰值存入计算峰值均值数组
+                        sumpeak += qrsmean[i];        //计算数组内峰值和
+                        sumlen++;                     //数组长度
+                        DetectionTime = qrsmeannum[i] - delay ;
+                        DetectionTime *= InputFileSampleFrequency ;
+                        DetectionTime /= SAMPLE_RATE ;
+                        if(annot.time>=DetectionTime){
+                            continue;
+                        }
+                        annot.time = DetectionTime ;
+                        annot.anntyp = 1 ;
+                        annot.aux = NULL ;
+                        putann2(fileann,&annot,lasttime,0);
+                        //WRITE TO THE TMP
+                        WRITE_THE_TMP2(annot.anntyp, bdac, m_clusters, m_type, Q_type, S_type,DetectionTime, modeltypen, modeltypev,&delnum);
+                    }
+                }
+                meanpeak = (int)(sumpeak*1.0/sumlen+0.5);
+            }
+            else{
+                countann++;
+                if(annotpre.anntyp == 2 )
+                {
+                    if((SampleCount - delay - annotpre.time)<51)
+                        annotpre.anntyp = 9;
+                    else if( annotpre.height>0.5*prenoraml && annotpre.height>0.8*annotpre.height)
+                        annotpre.anntyp = 1;
+                    else
+                        annotpre.anntyp = 9;
+                }
+                if(datapeak[dataid]>0.5*meanpeak && datapeak[dataid]<100){//2*meanpeak){
+                    if(meanid>=10){
+                        meanid=0;
+                    }
+                    if(sumlen<10){
+                        qrsmean[meanid++]=datapeak[dataid]; //
+                        sumpeak += datapeak[dataid];
+                        sumlen++;
+                        meanpeak = int(sumpeak*1.0/sumlen+0.5);
+                    }
+                    else if(datapeak[dataid]>0.75*meanpeak && datapeak[dataid]<1.25*meanpeak)
+                    {
+                        sumpeak += datapeak[dataid] - qrsmean[meanid];
+                        meanpeak = int(sumpeak*1.0/meanlen+0.5);
+                        qrsmean[meanid++]=datapeak[dataid];
+                    }
+                    beatType = 1;
+                    if(meanpeak>50)
+                        meanpeak = 50;
+                    else if(meanpeak<10)
+                        meanpeak =10;
+                }
+                else if(datapeak[dataid]>=100){//2*meanpeak){
+                    if(datapeak[dataid]>1.5*prenoraml)
+                        beatType = 13;
+                    else{
+                        beatType =1;
+                    }
+                }
+                else{
+                    if(countann>2) {
+                        if  (SampleCount - delay - annotpre.time < 51)
+                            beatType = 9;
+                        else{
+                            beatType = 2;
+                        }
+                    }
+                }
+                DetectionTime = SampleCount - delay ;
+                DetectionTime *= InputFileSampleFrequency ;
+                DetectionTime /= SAMPLE_RATE ;
+                if(annot.time>=DetectionTime){
+                    continue;
+                }
+                //annot.time = DetectionTime ;
+                annot.anntyp = beatType;
+                //annot.height = datapeak[dataid];
+                annot.aux = NULL ;
+
+                if(annot.anntyp == 1){ //根据qrs和周边的能量比，判断qrs是否是噪声
+                    int noid=dataid-delay-12;
+                    if (noid<0)
+                        noid +=1000;
+                    double sumround = 0;
+                    double sumqrs = 0;
+                    int mk=0;
+                    //int data[41];
+                    for(mk;mk<41;mk++){
+                        if(mk<10||mk>30){
+                            sumround += datahp[noid]*datahp[noid];
+                        }
+                        else{
+                            sumqrs+=datahp[noid]*datahp[noid];
+                        }
+                        data[mk] = datahp[noid];
+                        noid++;
+                        if(noid>=1000)
+                            noid=0;
+                    }
+                    sumround = sqrt(sumround*1.0/20.0);
+                    sumqrs = sqrt(sumqrs*1.0/21.0)*0.5;
+
+                    if(sumround>sumqrs){
+                        annot.anntyp = 13;
+                    }
+                }
+                int maxdn=0,mindn = 1000,maxid = 10,minid =10; //计算中心点左右最大最小值及其位置
+                for(int i=20;i>10;i--)
+                {
+                    if(data[i]>maxdn){
+                        maxdn=data[i];
+                        maxid = i;
+                    }
+                    if(data[i]<mindn){
+                        mindn = data[i];
+                        minid = i;
+                    }
+                }
+                int maxdnr=0,mindnr = 1000,maxidr = 21,minidr =21;
+                for(int i=21;i<31;i++)
+                {
+                    if(data[i]>maxdnr){
+                        maxdnr=data[i];
+                        maxidr = i;
+                    }
+                    if(data[i]<mindnr){
+                        mindnr = data[i];
+                        minidr = i;
+                    }
+                }
+
+                annot.width = minidr-minid;
+                annot.height =max(maxdn,maxdnr)-min(mindn,mindnr);
+                if(annot.time!=0)
+                    annot.rr = DetectionTime - annot.time;
+                annot.time = DetectionTime;
+                if(countann>1){
+                    if(annotpre.anntyp == 9){
+                        memcpy(&annotpre,&annot,sizeof(annot));
+                    }
+                    else {
+                        putann2(fileann, &annotpre, lasttime, 0);
+                        //WRITE TO THE TMP
+                        WRITE_THE_TMP3(annotpre.anntyp, m_type, Q_type, S_type, V_type, annotpre.time);
+                        memcpy(&annotppre, &annotpre, sizeof(annotpre));
+                        memcpy(&annotpre, &annot, sizeof(annot));
+                        if (annotppre.anntyp == 1)
+                            prenoraml = annotppre.height;
+                    }
+                }
+                else //(countann==1){
+                    memcpy(&annotpre,&annot,sizeof(annot));
+
+            }
+            qrslen++;
+        }
+
+
+        //useinqrs
+        dataid++;
+        if(dataid>=1000)
+            dataid=0;
+        // printf("%d\n",SampleCount);
+        // save the real-data
+        OUTlpc[lpcount] =bdac.qrsdet1.datafilt;
+        INlpc[lpcount++] = dataIN;
+    }
+
+//
+    //2 int change to 3 chars
+    int dif = LPBUFFER_LGTH/2-1+(HPBUFFER_LGTH-1)/2;
+    for(int i=0;i<lengthd*2;i++)
+    {
+        int id = i+dif;
+        if(id>=lengthd*2){
+            id=lengthd*2-1;
+        }
+        lpc2[0] = LOBYTE((short) INlpc[i]);
+        lpc2[1] = 0;
+        lpc2[1] = HIBYTE((short) INlpc[i]) & 0x0f;
+        lpc2[2] = LOBYTE((short) OUTlpc[id]);
+        lpc2[1] |= HIBYTE((short) OUTlpc[id]) << 4;
+        lpc2 += 3;
+    }
+    fwrite( buf, sizeof(char), file2c_lsize, fp);
+    fclose(fp);//close the 2-channal-dat file
+    delete[]buf;
+    delete[]lpc;
+    delete[]INlpc;
+    delete[]OUTlpc;
+
+    wfdb_p16(0, fileann);//STOP WRITE THE ATEST FILE
+    fclose(fileann);//CLOSE WRITE THE annotion FILE
+    fclose(filed); //CLOSE THE 1-channal-DAT FILE
+
+    // Write the new address book back to disk.
+    int Nnum = 0, Vnum=0, Anum = 0;
+    int countN = 0,countV = 0,countA=0,countS=0;
+    bool Nfind1 = false, Vfind1 = false, Afind1 = false;
+    int Nfind1ID = 0, Vfind1ID = 0, Afind1ID = 0;
+    fstream tempfile(ecg_tmp_file_path, ios::out | ios::trunc | ios::binary);
+    Template1 *tmp1N = tmpN->add_template1s();
+    tmp1N->set_id(0);
+    Template1 *tmp1V = tmpV->add_template1s();
+    tmp1V->set_id(0);
+    Template1 *tmp1A = tmpA->add_template1s();
+    tmp1A->set_id(0);
+    Template1 *tmp1S = tmpS->add_template1s();
+    tmp1S->set_id(0);
+
+    if (Q_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1A->add_template2s();
+        tmp1->set_id(0);
+        countA += Q_type.size();
+        for (int k = 0; k < Q_type.size(); k++) {
+            tmp1->add_positions_of_beats(Q_type[k]);
+        }
+    }
+    if (V_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1V->add_template2s();
+        tmp1->set_id(0);
+        countV += V_type.size();
+        for (int k = 0; k < V_type.size(); k++) {
+            tmp1->add_positions_of_beats(V_type[k]);
+        }
+    }
+    if (S_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1S->add_template2s();
+        tmp1->set_id(0);
+        countS += S_type.size();
+        for (int k = 0; k < S_type.size(); k++) {
+            tmp1->add_positions_of_beats(S_type[k]);
+        }
+    }
+    if (m_type.size()>0) {
+        Template2 *tmp1;
+        tmp1 = tmp1N->add_template2s();
+        tmp1->set_id(0);
+        countN += m_type.size();
+        for (int k = 0; k < m_type.size(); k++) {
+            tmp1->add_positions_of_beats(m_type[k]);
+        }
+    }
+
+    //printf("all tmp = %d\n", Anum + Vnum +Nnum);
+    printf("normal = %d\n",m_type.size());
+    printf("PVC = %d\n",V_type.size());
+    printf("Q = %d\n",Q_type.size());
+    printf("S = %d\n",S_type.size());
+    if (!tmp.SerializeToOstream(&tempfile)) {
+        cerr << "Failed to write address book." << endl;
+        return -1;
+    }
+    google::protobuf::ShutdownProtobufLibrary();
+//
     return 0;
 }*/

@@ -76,7 +76,7 @@ int NOISEcls::GetNoiseEstimate()
 	NoiseCheck() returns 0.
 
 ***********************************************************************/
-
+//低频噪声分析
 int NOISEcls::NoiseCheck(int datum, int delay, int RR, int beatBegin, int beatEnd)
 	{
 	int ptr, i;

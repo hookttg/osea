@@ -79,7 +79,7 @@ void multithread_task(int index) {
             
             message_queues[index]->pop(cmd);
             if (cmd.oper == CREATE) {
-                printf("cmd CREATE!\n");
+                printf("(1)cmd CREATE!\n");
                 /*current_dir = watch.get(cmd.wd);
                 sprintf(path, "%s/%ld.dat", current_dir.c_str(), cmd.name_id);
                 p = new ecg(path, CIRCULAR_LEN);
@@ -89,7 +89,7 @@ void multithread_task(int index) {
 
             } else if (cmd.oper == WRITE) {
 
-                printf("cmd write!\n");
+                printf("(2)cmd write!\n");
                 current_dir = watch.get(cmd.wd);
                 sprintf(path, "%s/%ld.dat", current_dir.c_str(), cmd.name_id);
                 TESTRECORD line;
@@ -107,11 +107,11 @@ void multithread_task(int index) {
 //                    printf("%d\t%d\n",i,loc[i]);
 //                }
 
-                line.TestRecord(path);
+                line.TestRecord_qrs(path);
 
             } else if (cmd.oper == CLOSE) {
 
-                printf("cmd CLOSE!\n");
+                printf("(3)cmd CLOSE!\n");
 
                 // for future use;
     /*            current_dir = watch.get(cmd.wd);
@@ -181,6 +181,9 @@ bool dir_exists(const char* pzPath) {
 
 int main(int argc,char*argv[]) {
 
+/*    TESTRECORD line;
+    line.TestRecord_read_save("/opt/ecgData/2017-05/207.dat");
+*/
     google::InitGoogleLogging("HEALTHME");
   
     conf::Instance()->Load(SYS_CONF);
